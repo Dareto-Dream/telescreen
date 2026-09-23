@@ -83,7 +83,7 @@ function navigate() {
   for (const a of document.querySelectorAll('#nav a')) a.classList.toggle('active', hash === a.dataset.path || hash.startsWith(`${a.dataset.path}/`));
   for (const { pattern, render } of routes) {
     const m = hash.match(pattern);
-    if (m) { mount(h('p', { class: 'empty' }, 'Loading…')); return render(...m.slice(1).map(decodeURIComponent)).catch(err => { fail(err); mount(h('div', { class: 'notice error' }, err.message)); }); }
+    if (m) { mount(h('p', { class: 'empty' }, 'Loading…')); return render(...m.slice(1).map(value => value === undefined ? undefined : decodeURIComponent(value))).catch(err => { fail(err); mount(h('div', { class: 'notice error' }, err.message)); }); }
   }
   location.hash = '#/overview';
 }
