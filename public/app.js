@@ -93,12 +93,15 @@ function buildNav(pg, redis) {
   const link = (path, label, extra) => h('a', { href: `#${path}`, 'data-path': path }, h('span', {}, label), extra);
   $('#nav').replaceChildren(
     link('/overview', 'Overview'),
-    h('div', { class: 'nav-group' }, 'Site'),
-    ['projects', 'songs', 'albums', 'staff'].map(c => link(`/content/${c}`, c[0].toUpperCase() + c.slice(1))),
-    link('/files', 'CDN files'),
-    h('div', { class: 'nav-group' }, 'DeltaTime'),
-    link('/deltatime', 'Fraud review'),
-    h('div', { class: 'nav-group' }, 'Data'),
+    h('div', { class: 'nav-group' }, 'Publish'),
+    link('/content/projects', 'Projects'),
+    link('/content/songs', 'Music'),
+    link('/content/albums', 'Releases'),
+    link('/content/staff', 'People'),
+    link('/files', 'File library'),
+    h('div', { class: 'nav-group' }, 'Moderate'),
+    link('/deltatime', 'Account review'),
+    h('div', { class: 'nav-group' }, 'Systems'),
     pg.map(c => link(`/pg/${c.name}`, `pg · ${c.name}`, dot(c.ok))),
     redis.map(c => link(`/redis/${c.name}`, `redis · ${c.name}`, dot(c.ok))),
     h('div', { class: 'nav-group' }, 'Infra'),
@@ -139,7 +142,13 @@ route(/^\/overview$/, async () => {
   const section = (title, body) => h('section', { class: 'stack', style: 'margin-bottom: 2rem' }, h('p', { class: 'eyebrow' }, title), body);
   const errorOr = (data, fn) => data.error ? h('div', { class: 'notice error' }, data.error) : fn(data);
   mount(
-    head('telescreen', 'Everything, at a glance', h('button', { class: 'outline small', onclick: navigate }, 'Refresh')),
+    head('telescreen', 'Operations desk', h('button', { class: 'outline small', onclick: navigate }, 'Refresh')),
+    h('section', { class: 'command-deck' },
+      h('a', { href: '#/content/projects/new', class: 'command-card primary-action' }, h('span', { class: 'command-icon' }, '+'), h('span', {}, h('strong', {}, 'Create a project'), h('small', {}, 'Add it, shape its details, then place it.'))),
+      h('a', { href: '#/content/songs/new', class: 'command-card' }, h('span', { class: 'command-icon' }, '♫'), h('span', {}, h('strong', {}, 'Add music'), h('small', {}, 'Publish a song or update its metadata.'))),
+      h('a', { href: '#/files', class: 'command-card' }, h('span', { class: 'command-icon' }, '↑'), h('span', {}, h('strong', {}, 'Upload files'), h('small', {}, 'Manage everything on the CDN.'))),
+      h('a', { href: '#/deltatime', class: 'command-card' }, h('span', { class: 'command-icon' }, '!'), h('span', {}, h('strong', {}, 'Review accounts'), h('small', {}, 'Investigate fraud and apply verdicts.'))),
+    ),
     section('Endpoints', errorOr(http, list => list.length ? h('div', { class: 'grid' }, list.map(c => h('div', { class: 'card tight' },
       h('h3', {}, dot(c.ok), c.name), h('dl', { class: 'stat' }, h('dt', {}, 'status'), h('dd', {}, c.status ?? c.body), h('dt', {}, 'latency'), h('dd', {}, `${c.ms}ms`), h('dt', {}, 'url'), h('dd', { title: c.url }, c.url))))) : h('p', { class: 'empty' }, 'No TELESCREEN_HTTP_* endpoints configured.'))),
     section('Postgres', errorOr(pg, list => list.length ? h('div', { class: 'grid' }, list.map(c => h('a', { href: `#/pg/${c.name}`, class: 'button-link' }, h('div', { class: 'card tight interactive' },
@@ -175,6 +184,7 @@ const FIELDS = {
 };
 const label = (c, r) => (c === 'staff' ? r.name : r.title) || `#${r.id}`;
 const subLabel = (c, r) => c === 'projects' ? r.progress : c === 'songs' ? r.artist : c === 'albums' ? `${r.type || ''} · ${(r.track_ids || []).length} tracks` : r.role;
+const fieldLabel = name => name.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
 
 route(/^\/content\/(projects|songs|albums|staff)(?:\/(\d+|new))?$/, async (collection, selected) => {
   let records = await api('GET', `/api/content/${collection}`);
@@ -190,11 +200,13 @@ route(/^\/content\/(projects|songs|albums|staff)(?:\/(\d+|new))?$/, async (colle
   function drawList() {
     const term = filter.value.toLowerCase();
     const byId = new Map(records.map(r => [r.id, r]));
-    listEl.replaceChildren(...order.map(id => byId.get(id)).filter(r => r && (!term || JSON.stringify(r).toLowerCase().includes(term))).map(r => h('div', { class: 'row' },
-      h('button', { class: `grow${String(r.id) === selected ? ' active' : ''}`, onclick: () => { location.hash = `#/content/${collection}/${r.id}`; } },
+    listEl.replaceChildren(...order.map(id => byId.get(id)).filter(r => r && (!term || JSON.stringify(r).toLowerCase().includes(term))).map(r => h('div', { class: `record-row${String(r.id) === selected ? ' selected' : ''}` },
+      r.thumbnail_url || r.cover_url ? h('img', { class: 'record-art', src: r.thumbnail_url || r.cover_url, alt: '' }) : h('span', { class: 'record-initial' }, label(collection, r).slice(0, 1)),
+      h('button', { class: 'record-open grow', onclick: () => { location.hash = `#/content/${collection}/${r.id}`; } },
         h('span', { class: 'label' }, label(collection, r)), h('span', { class: 'sub' }, subLabel(collection, r) || `#${r.id}`)),
-      term ? null : h('button', { class: 'ghost', title: 'Move up', onclick: () => move(r.id, -1) }, '↑'),
-      term ? null : h('button', { class: 'ghost', title: 'Move down', onclick: () => move(r.id, 1) }, '↓'))));
+      term ? null : h('div', { class: 'move-controls' },
+        h('button', { class: 'ghost', title: 'Move up', 'aria-label': `Move ${label(collection, r)} up`, onclick: () => move(r.id, -1) }, '↑'),
+        h('button', { class: 'ghost', title: 'Move down', 'aria-label': `Move ${label(collection, r)} down`, onclick: () => move(r.id, 1) }, '↓')))));
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'Nothing here.'));
   }
   function move(id, delta) {
@@ -224,7 +236,7 @@ route(/^\/content\/(projects|songs|albums|staff)(?:\/(\d+|new))?$/, async (colle
       else if (type === 'json') input.value = value === undefined || value === null ? '' : JSON.stringify(value, null, 2);
       else if (type !== 'bool' && type !== 'select') input.value = value ?? '';
       inputs[name] = { input, type };
-      return h('label', { class: `${wide || type === 'bool' ? 'wide ' : ''}${type === 'bool' ? 'inline' : ''}` }, type === 'bool' ? [input, name] : [h('span', {}, name, type === 'tags' ? h('span', { class: 'hint' }, ' comma separated') : type === 'json' ? h('span', { class: 'hint' }, ' JSON') : null), input]);
+      return h('label', { class: `${wide || type === 'bool' ? 'wide ' : ''}${type === 'bool' ? 'inline' : ''}` }, type === 'bool' ? [input, fieldLabel(name)] : [h('span', {}, fieldLabel(name), type === 'tags' ? h('span', { class: 'hint' }, ' comma separated') : type === 'json' ? h('span', { class: 'hint' }, ' JSON') : null), input]);
     });
     const extraInput = h('textarea', { class: 'code', rows: 4 });
     extraInput.value = Object.keys(extras).length ? JSON.stringify(extras, null, 2) : '';
@@ -252,15 +264,17 @@ route(/^\/content\/(projects|songs|albums|staff)(?:\/(\d+|new))?$/, async (colle
       if (!await confirmBox(`Delete “${label(collection, record)}”? This is permanent.`, { typed: 'delete' })) return;
       try { await api('DELETE', `/api/content/${collection}/${record.id}`); toast('Deleted'); location.hash = `#/content/${collection}`; } catch (e) { fail(e); }
     };
-    editorEl.replaceChildren(h('div', { class: 'card stack' },
-      h('div', { class: 'row' }, h('h2', { class: 'headline grow', style: 'margin:0' }, isNew ? `New ${collection.replace(/s$/, '')}` : label(collection, record)), isNew ? null : h('span', { class: 'outline-badge' }, `id ${record.id}`)),
-      h('div', { class: 'form' }, fields, h('label', { class: 'wide' }, h('span', {}, 'extra fields', h('span', { class: 'hint' }, ' JSON object, merged on save')), extraInput)),
+    editorEl.replaceChildren(h('div', { class: 'card editor-card stack' },
+      h('div', { class: 'editor-title' }, h('div', {}, h('p', { class: 'eyebrow' }, isNew ? 'new record' : `editing ${collection.slice(0, -1)}`), h('h2', { class: 'headline' }, isNew ? `New ${collection.replace(/s$/, '')}` : label(collection, record))), isNew ? null : h('span', { class: 'outline-badge' }, `id ${record.id}`)),
+      collection === 'projects' ? h('p', { class: 'caption' }, 'Use the arrows in the project list to place this project on the site. Save Order publishes the arrangement.') : null,
+      h('div', { class: 'form' }, fields, h('label', { class: 'wide advanced-fields' }, h('span', {}, 'Extra fields', h('span', { class: 'hint' }, ' JSON object, merged on save')), extraInput)),
       h('div', { class: 'row end' }, isNew ? null : h('button', { class: 'danger', onclick: remove }, 'Delete'), h('button', { class: 'cta', onclick: save }, isNew ? 'Create' : 'Save'))));
   }
 
   mount(
-    head('site content', collection[0].toUpperCase() + collection.slice(1), saveOrder, h('button', { class: 'cta small', onclick: () => { location.hash = `#/content/${collection}/new`; } }, '+ New')),
-    h('div', { class: 'split' }, h('div', { class: 'card tight stack' }, filter, listEl), editorEl),
+    head('publishing', collection === 'songs' ? 'Music library' : collection[0].toUpperCase() + collection.slice(1), saveOrder, h('button', { class: 'cta small', onclick: () => { location.hash = `#/content/${collection}/new`; } }, `+ New ${collection.slice(0, -1)}`)),
+    h('div', { class: 'workspace-note' }, h('span', {}, `${records.length} ${collection}`), collection === 'projects' ? h('span', {}, 'Move projects with the arrows, then save the order.') : h('span', {}, 'Select a record to edit it.')),
+    h('div', { class: 'split content-workspace' }, h('div', { class: 'card tight stack' }, filter, listEl), editorEl),
   );
   drawList(); drawEditor();
   window.addEventListener('hashchange', function warn() { window.removeEventListener('hashchange', warn); if (orderDirty) toast('Unsaved order change discarded', true); }, { once: true });
