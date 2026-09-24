@@ -157,7 +157,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       h('label', { class: 'wide' }, h('span', {}, 'Redirect URIs ', h('span', { class: 'hint' }, 'one per line, exact match, https (or http://localhost)')), f.redirects),
       h('label', { class: 'wide' }, h('span', {}, 'Post-logout redirect URIs ', h('span', { class: 'hint' }, 'optional')), f.logouts),
       h('div', { class: 'wide row' }, h('span', { class: 'caption' }, 'Scopes:'), f.scopes.map(x => h('label', { class: 'inline' }, x, x.value))),
-      h('label', { class: 'inline' }, f.firstParty, h('span', {}, 'First-party ', h('span', { class: 'hint' }, 'your own site: skips the consent screen'))),
+      h('label', { class: 'inline' }, f.firstParty, h('span', {}, 'First-party ', h('span', { class: 'hint' }, 'your own site: shown as an official DeltaVDevs app'))),
       c ? null : h('label', { class: 'inline' }, f.confidential, h('span', {}, 'Confidential ', h('span', { class: 'hint' }, 'has a server that can keep a secret (almost always)'))),
     );
     return { el, body };
