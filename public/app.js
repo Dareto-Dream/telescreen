@@ -80,7 +80,7 @@ const routes = [];
 const route = (pattern, render) => routes.push({ pattern, render });
 function navigate() {
   const hash = location.hash.replace(/^#/, '') || '/overview';
-  for (const a of document.querySelectorAll('#nav a')) a.classList.toggle('active', hash === a.dataset.path || hash.startsWith(`${a.dataset.path}/`));
+  for (const a of document.querySelectorAll('#nav a')) { const path = hash.split('?')[0]; a.classList.toggle('active', path === a.dataset.path || path.startsWith(`${a.dataset.path}/`)); }
   for (const { pattern, render } of routes) {
     const m = hash.match(pattern);
     if (m) { mount(h('p', { class: 'empty' }, 'Loading…')); return render(...m.slice(1).map(value => value === undefined ? undefined : decodeURIComponent(value))).catch(err => { fail(err); mount(h('div', { class: 'notice error' }, err.message)); }); }
@@ -101,6 +101,9 @@ function buildNav(pg, redis) {
     link('/files', 'File library'),
     h('div', { class: 'nav-group' }, 'Moderate'),
     link('/deltatime', 'Account review'),
+    h('div', { class: 'nav-group' }, 'Ward'),
+    link('/ward/accounts', 'Accounts'),
+    link('/ward/apps', 'Apps'),
     h('div', { class: 'nav-group' }, 'Systems'),
     pg.map(c => link(`/pg/${c.name}`, `pg · ${c.name}`, dot(c.ok))),
     redis.map(c => link(`/redis/${c.name}`, `redis · ${c.name}`, dot(c.ok))),
@@ -568,6 +571,9 @@ route(/^\/railway$/, async () => {
 });
 
 // DeltaTime lives in its own module so it can grow independently.
+import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
+  route(/^\/ward(?:[/?].*)?$/, async () => mount(head('ward', 'Accounts'), h('div', { class: 'notice warn' }, 'Ward module failed to load.')));
+});
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
   route(/^\/deltatime(?:\/.*)?$/, async () => mount(head('deltatime', 'Fraud review'), h('div', { class: 'notice warn' }, 'DeltaTime module failed to load.')));
 }).finally(boot);

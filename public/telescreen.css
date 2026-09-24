@@ -159,3 +159,15 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .command-deck { grid-template-columns: 1fr; }
   .workspace-note { align-items: flex-start; flex-direction: column; }
 }
+
+/* ---------- ward ---------- */
+.ward-secret { user-select: all; white-space: normal !important; word-break: break-all; text-align: left !important; }
+.ward-select { user-select: all; }
+.ward-search { min-width: min(320px, 100%); }
+.ward-sub { margin: -1rem 0 1rem; }
+.ward-gap { margin-top: var(--spacing-2); }
+.ward-gap-below { margin-bottom: var(--spacing-2); }
+.ward-gap-above { margin-top: var(--spacing-4); }
+.ward-avatar { width: 72px; height: 72px; border-radius: var(--radii-full); object-fit: cover; }
+textarea.ward-uris { min-height: 5rem; }
+textarea.ward-uris.short { min-height: 3rem; }
