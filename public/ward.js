@@ -1,7 +1,7 @@
 // Ward account management. Every write goes through Ward's /admin/v1, which
 // validates it and records it in Ward's audit log under your email.
 
-const SCOPES = ['openid', 'profile', 'email', 'offline_access'];
+const SCOPES = ['openid', 'profile', 'email', 'offline_access', 'deltatime'];
 const PROVIDERS = ['google', 'github', 'discord'];
 
 export function register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago }) {
@@ -142,7 +142,8 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       homepage: h('input', { value: c?.homepage_url || '', placeholder: 'https://blog.deltavdevs.com' }),
       redirects: h('textarea', { class: 'code ward-uris', placeholder: 'https://blog.deltavdevs.com/api/auth/ward/callback' }, (c?.redirect_uris || []).join('\n')),
       logouts: h('textarea', { class: 'code ward-uris short', placeholder: 'https://blog.deltavdevs.com/' }, (c?.post_logout_redirect_uris || []).join('\n')),
-      scopes: SCOPES.map(sc => h('input', { type: 'checkbox', value: sc, checked: c ? c.scopes.includes(sc) : true })),
+      scopes: SCOPES.map(sc => h('input', { type: 'checkbox', value: sc, checked: c ? c.scopes.includes(sc) : sc !== 'deltatime' })),
+      resource: h('input', { type: 'checkbox', checked: Boolean(c?.resource_scopes?.includes('deltatime')) }),
       firstParty: h('input', { type: 'checkbox', checked: c?.first_party ?? true }),
       confidential: h('input', { type: 'checkbox', checked: true }),
     };
@@ -150,6 +151,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       name: f.name.value.trim(), homepage_url: f.homepage.value.trim() || null,
       redirect_uris: lines(f.redirects.value), post_logout_redirect_uris: lines(f.logouts.value),
       scopes: f.scopes.filter(x => x.checked).map(x => x.value), first_party: f.firstParty.checked,
+      resource_scopes: f.resource.checked ? ['deltatime'] : [],
       ...(c ? {} : { confidential: f.confidential.checked }),
     });
     const el = h('div', { class: 'form' },
@@ -158,6 +160,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       h('label', { class: 'wide' }, h('span', {}, 'Post-logout redirect URIs ', h('span', { class: 'hint' }, 'optional')), f.logouts),
       h('div', { class: 'wide row' }, h('span', { class: 'caption' }, 'Scopes:'), f.scopes.map(x => h('label', { class: 'inline' }, x, x.value))),
       h('label', { class: 'inline' }, f.firstParty, h('span', {}, 'First-party ', h('span', { class: 'hint' }, 'your own site: shown as an official DeltaVDevs app'))),
+      h('label', { class: 'inline wide' }, f.resource, h('span', {}, 'Serves DeltaTime stats ', h('span', { class: 'hint' }, 'resource server: may verify tokens other apps hold for the deltatime scope. Only DeltaTime itself.'))),
       c ? null : h('label', { class: 'inline' }, f.confidential, h('span', {}, 'Confidential ', h('span', { class: 'hint' }, 'has a server that can keep a secret (almost always)'))),
     );
     return { el, body };
