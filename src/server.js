@@ -14,6 +14,7 @@ import { httpRoutes } from './http.js';
 import { contentRoutes } from './content.js';
 import { fileRoutes } from './files.js';
 import { deltatimeRoutes, closeDeltatime } from './deltatime.js';
+import { wardRoutes } from './ward.js';
 
 const THEME = 'https://css.deltavdevs.com';
 
@@ -28,7 +29,7 @@ export async function buildApp(options = {}) {
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", THEME, 'https://fonts.googleapis.com'],
         fontSrc: [THEME, 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https://lh3.googleusercontent.com', config.files.publicUrl],
+        imgSrc: ["'self'", 'data:', 'https://lh3.googleusercontent.com', 'https://avatars.githubusercontent.com', 'https://cdn.discordapp.com', config.files.publicUrl],
         connectSrc: ["'self'"],
         formAction: ["'self'"],
         frameAncestors: ["'none'"],
@@ -63,6 +64,7 @@ export async function buildApp(options = {}) {
     await api.register(contentRoutes);
     await api.register(fileRoutes);
     await api.register(deltatimeRoutes);
+    await api.register(wardRoutes);
     await api.register(postgresRoutes);
     await api.register(redisRoutes);
     await api.register(railwayRoutes);

@@ -45,6 +45,11 @@ export const config = {
     // Optional read-only view of DeltaTime's own Postgres for the suspected queue.
     dbConnection: (env.DELTATIME_PG_CONNECTION || 'deltatime').toLowerCase(),
   },
+  // Ward (accounts for every DeltaVDevs site), managed over its /admin/v1.
+  ward: {
+    url: (env.WARD_URL || '').replace(/\/+$/, ''),
+    key: env.WARD_ADMIN_KEY || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',
