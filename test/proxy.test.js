@@ -40,6 +40,8 @@ process.env.CDN_WEBDAV_USER = 'dav';
 process.env.CDN_WEBDAV_PASSWORD = 'davpass';
 process.env.DELTATIME_URL = base;
 process.env.DELTATIME_ADMIN_KEY = 'dt-admin-key';
+process.env.WARD_URL = base;
+process.env.WARD_ADMIN_KEY = 'ward-admin-key';
 
 const { buildApp } = await import('../src/server.js');
 const { seal, SESSION_COOKIE } = await import('../src/session.js');
@@ -89,4 +91,25 @@ test('deltatime status reports the acting admin', async () => {
   const res = await app.inject({ method: 'GET', url: '/api/deltatime', headers });
   assert.equal(res.json().check.creator.username, 'boss');
   assert.equal(res.json().db, false);
+});
+
+test('ward: allowlisted routes forward with the key and actor, others never leave', async () => {
+  seen.length = 0;
+  const ok = await app.inject({ method: 'POST', url: '/api/ward/users/0b0e7d3c-0000-4000-8000-000000000001/suspend', headers: { ...headers, origin: 'http://localhost:3998' }, payload: { reason: 'spam' } });
+  assert.equal(ok.statusCode, 200);
+  const hit = seen.find(s => s.url === '/admin/v1/users/0b0e7d3c-0000-4000-8000-000000000001/suspend');
+  assert.equal(hit.auth, 'Bearer ward-admin-key');
+  assert.equal(hit.headers['x-ward-actor'], 'boss@example.com');
+  assert.deepEqual(JSON.parse(hit.body), { reason: 'spam' });
+  assert.ok(!ok.body.includes('ward-admin-key'));
+
+  seen.length = 0;
+  for (const [method, url] of [['GET', '/api/ward/users/../../secrets'], ['POST', '/api/ward/users/not-a-uuid/suspend'], ['DELETE', '/api/ward/audit']]) {
+    const res = await app.inject({ method, url, headers: { ...headers, origin: 'http://localhost:3998' }, payload: method === 'GET' ? undefined : {} });
+    assert.notEqual(res.statusCode, 200, url);
+  }
+  assert.equal(seen.length, 0, 'nothing outside the allowlist reaches Ward');
+
+  const anon = await app.inject({ url: '/api/ward/users' });
+  assert.equal(anon.statusCode, 401);
 });
