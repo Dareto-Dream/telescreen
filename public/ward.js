@@ -4,7 +4,7 @@
 const SCOPES = ['openid', 'profile', 'email', 'offline_access', 'deltatime'];
 const PROVIDERS = ['google', 'github', 'discord'];
 
-export function register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago }) {
+export function register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, me }) {
   const TABS = [['accounts', 'Accounts', '#/ward/accounts'], ['apps', 'Apps', '#/ward/apps'], ['audit', 'Audit log', '#/ward/audit']];
   const tabs = active => h('div', { class: 'tabs' }, TABS.map(([id, text, href]) => h('button', { class: active === id ? 'active' : '', onclick: () => { location.hash = href; } }, text)));
   const table = (rows, cols) => rows.length
@@ -54,6 +54,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       table(data.users, [
         ['account', u => h('span', {}, userLink(u), ' ', h('span', { class: 'caption' }, `@${u.username}`))],
         ['email', u => u.email || '—'],
+        ['staff', u => u.admin_level || '—'],
         ['sign-in', u => [u.has_password ? 'password' : null, ...u.providers].filter(Boolean).join(', ') || '—'],
         ['2fa', u => u.mfa ? 'on' : ''],
         ['status', statusPill],
@@ -109,7 +110,15 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
               h('dt', {}, 'joined'), h('dd', {}, new Date(user.created_at).toLocaleString()),
               h('dt', {}, 'last sign-in'), h('dd', {}, user.last_login_at ? new Date(user.last_login_at).toLocaleString() : '—'),
               h('dt', {}, 'password'), h('dd', {}, user.has_password ? 'set' : 'none'),
-              h('dt', {}, '2fa'), h('dd', {}, user.mfa ? 'on' : 'off'))),
+              h('dt', {}, '2fa'), h('dd', {}, user.mfa ? 'on' : 'off'),
+              h('dt', {}, 'staff level'), h('dd', {}, user.admin_level || 'none'))),
+          me()?.level === 'owner' ? section('Staff level', h('div', { class: 'stack' },
+            h('p', { class: 'caption' }, 'viewer: read-only admin tools (analytics). admin: telescreen and analytics. owner: everything, including staff levels. Changing it signs them out of admin tools.'),
+            h('div', { class: 'row' }, ...[null, 'viewer', 'admin', 'owner'].map(level => h('button', {
+              class: level === (user.admin_level ?? null) ? 'cta small' : 'outline small',
+              disabled: level === (user.admin_level ?? null),
+              onclick: async () => { if (await confirmBox(`Make @${user.username} ${level || 'not staff'}?`, { danger: level === 'owner' })) act('POST', '/admin-level', { level }, 'Staff level changed'); },
+            }, level || 'none'))))) : '',
           section('Profile', h('div', { class: 'stack' },
             h('label', {}, 'Display name', name), h('label', {}, 'Username', username),
             h('label', {}, h('span', {}, 'Email ', h('span', { class: 'hint' }, 'admin-set emails count as verified')), email), save)),

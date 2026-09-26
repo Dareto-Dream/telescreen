@@ -113,8 +113,10 @@ function buildNav(pg, redis) {
 }
 
 // ---------- boot ----------
-function showLogin() {
+function showLogin(state = {}) {
   me = null;
+  $('#login-ward').hidden = !state.ward;
+  $('#login-google').hidden = !state.google;
   $('#shell').hidden = true; $('#login').hidden = false;
   const error = new URLSearchParams(location.search).get('error');
   if (error) { $('#login-error').textContent = error; $('#login-error').hidden = false; history.replaceState(null, '', '/'); }
@@ -122,10 +124,10 @@ function showLogin() {
 
 async function boot() {
   const state = await fetch('/auth/state').then(r => r.json()).catch(() => ({ signedIn: false }));
-  if (!state.signedIn) return showLogin();
+  if (!state.signedIn) return showLogin(state);
   me = await api('GET', '/api/me');
   $('#login').hidden = true; $('#shell').hidden = false;
-  $('#me').replaceChildren(me.picture ? h('img', { src: me.picture, alt: '', referrerpolicy: 'no-referrer' }) : null, h('span', { title: me.email }, me.email));
+  $('#me').replaceChildren(me.picture ? h('img', { src: me.picture, alt: '', referrerpolicy: 'no-referrer' }) : null, h('span', { title: me.email || me.name }, `${me.email || me.name} · ${me.level}`));
   $('#logout').onclick = async () => { await api('POST', '/auth/logout').catch(() => {}); location.href = '/'; };
   const [pg, redis] = await Promise.all([api('GET', '/api/pg').catch(() => []), api('GET', '/api/redis').catch(() => [])]);
   buildNav(pg, redis);
@@ -571,7 +573,7 @@ route(/^\/railway$/, async () => {
 });
 
 // DeltaTime lives in its own module so it can grow independently.
-import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
+import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot, me: () => me })).catch(() => {
   route(/^\/ward(?:[/?].*)?$/, async () => mount(head('ward', 'Accounts'), h('div', { class: 'notice warn' }, 'Ward module failed to load.')));
 });
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {

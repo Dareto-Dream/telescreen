@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { requireOwner } from './auth.js';
 import { z } from 'zod';
 import { config } from './config.js';
 import { audit } from './audit.js';
@@ -143,6 +144,7 @@ export async function postgresRoutes(app) {
   // BEGIN or SET can never leak into the browsing pool.
   app.post('/api/pg/:conn/query', async request => {
     const body = z.object({ sql: z.string().min(1).max(200_000), write: z.boolean().default(false) }).parse(request.body);
+    if (body.write) requireOwner(request); // read-only SQL is fine for any admin
     const { entry } = connection(request.params.conn);
     audit(request, body.write ? 'pg.sql.write' : 'pg.sql.read', { conn: entry.name, sql: body.sql });
     const client = new pg.Client({ connectionString: entry.url, connectionTimeoutMillis: 5000, statement_timeout: TIMEOUT_MS, application_name: 'telescreen-console' });

@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { requireOwner } from './auth.js';
 import { z } from 'zod';
 import { config } from './config.js';
 import { audit } from './audit.js';
@@ -125,6 +126,7 @@ export async function redisRoutes(app) {
   // Raw command console on a throwaway connection so SELECT / CLIENT SETNAME etc.
   // never bleed into the shared browsing client.
   app.post('/api/redis/:conn/command', async request => {
+    requireOwner(request);
     const body = z.object({ args: z.array(z.string().max(1_000_000)).min(1).max(10_000) }).parse(request.body);
     const { entry } = connection(request.params.conn);
     const [command, ...rest] = body.args;

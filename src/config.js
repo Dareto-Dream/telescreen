@@ -49,6 +49,9 @@ export const config = {
   ward: {
     url: (env.WARD_URL || '').replace(/\/+$/, ''),
     key: env.WARD_ADMIN_KEY || '',
+    // Telescreen's own Ward app, for signing in ("Continue with Ward").
+    clientId: env.WARD_CLIENT_ID || '',
+    clientSecret: env.WARD_CLIENT_SECRET || '',
   },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
@@ -59,12 +62,15 @@ export const config = {
   },
 };
 
-// Fail closed: an admin console with no allowlist or a weak signing key must not boot.
+export const wardSignIn = () => Boolean(config.ward.url && config.ward.clientId && config.ward.clientSecret && config.ward.key);
+// Google + ADMIN_EMAILS is the backup way in while Ward sign-in is new.
+export const googleSignIn = () => Boolean(config.google.id && config.google.secret && config.adminEmails.length);
+
+// Fail closed: an admin console with no way to check who's an admin, or a weak signing key, must not boot.
 export function assertConfig() {
   const problems = [];
   if (config.sessionSecret.length < 32) problems.push('SESSION_SECRET must be at least 32 characters');
-  if (!config.adminEmails.length) problems.push('ADMIN_EMAILS must list at least one Google account');
-  if (!config.google.id || !config.google.secret) problems.push('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required');
+  if (!wardSignIn() && !googleSignIn()) problems.push('set WARD_URL, WARD_ADMIN_KEY, WARD_CLIENT_ID and WARD_CLIENT_SECRET (or, as a backup, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and ADMIN_EMAILS)');
   if (config.production && !config.publicUrl.startsWith('https://')) problems.push('PUBLIC_URL must be https in production');
   if (problems.length) throw new Error(`telescreen refuses to start:\n - ${problems.join('\n - ')}`);
 }

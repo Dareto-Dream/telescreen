@@ -19,8 +19,9 @@
         <h1 class="ultratitle">Telescreen</h1>
         <p class="lead">Admin for the DeltaVDevs site, databases, caches, files and DeltaTime.</p>
         <p id="login-error" class="notice error" hidden></p>
-        <a class="button-link" href="/auth/google/start"><button class="cta lg" type="button" tabindex="-1">Sign in with Google</button></a>
-        <p class="caption">Only allowlisted accounts get in. Everything you do here is audit-logged.</p>
+        <a class="button-link" id="login-ward" href="/auth/ward/start" hidden><button class="cta lg" type="button" tabindex="-1">Continue with Ward</button></a>
+        <a class="button-link" id="login-google" href="/auth/google/start" hidden><button class="outline" type="button" tabindex="-1">Sign in with Google (backup)</button></a>
+        <p class="caption">Ward accounts with admin or owner access only. Everything you do here is audit-logged.</p>
       </div>
     </div>
 

@@ -3,7 +3,8 @@ import { config } from './config.js';
 
 // Sessions are stateless HMAC-signed cookies on purpose: telescreen has to keep
 // working when the Redis or Postgres it administers is down. Rotating
-// SESSION_SECRET (or removing an email from ADMIN_EMAILS) revokes everyone.
+// SESSION_SECRET revokes everyone. Ward sessions are also re-checked against
+// Ward (see auth.js), so a demotion or suspension ends them within a minute.
 export const SESSION_COOKIE = config.production ? '__Host-telescreen' : 'telescreen';
 export const OAUTH_COOKIE = config.production ? '__Host-telescreen-oauth' : 'telescreen-oauth';
 export const cookieOptions = { httpOnly: true, secure: config.production, sameSite: 'lax', path: '/' };
@@ -38,8 +39,16 @@ export function unseal(purpose, value) {
 
 export const isAdmin = email => typeof email === 'string' && config.adminEmails.includes(email.toLowerCase());
 
+// Ward admin levels that may use telescreen. Viewers are read-only staff (analytics).
+export const CONSOLE_LEVELS = ['admin', 'owner'];
+
 export function readSession(request) {
   const session = unseal('session', request.cookies[SESSION_COOKIE]);
-  // Re-check the allowlist every request so dropping an email takes effect on restart.
-  return session && isAdmin(session.email) ? session : null;
+  if (!session) return null;
+  if (session.via === 'ward') return typeof session.sub === 'string' && CONSOLE_LEVELS.includes(session.level) ? session : null;
+  // Google backup: re-check the allowlist every request. Allowlisted people are the owners.
+  return isAdmin(session.email) ? { ...session, via: 'google', level: 'owner' } : null;
 }
+
+// Who to name in audit logs and in Ward's X-Ward-Actor.
+export const actorOf = session => session?.email || (session?.sub ? `ward:${session.sub}` : null);

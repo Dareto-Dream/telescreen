@@ -7,6 +7,7 @@ import { ZodError } from 'zod';
 import { config, assertConfig } from './config.js';
 import { authRoutes, guard } from './auth.js';
 import { readSession } from './session.js';
+import { wardSignIn, googleSignIn } from './config.js';
 import { postgresRoutes, closePostgres } from './postgres.js';
 import { redisRoutes, closeRedis } from './redis.js';
 import { railwayRoutes } from './railway.js';
@@ -56,7 +57,8 @@ export async function buildApp(options = {}) {
   await app.register(async api => {
     api.addHook('onRequest', guard);
     api.get('/api/me', async request => ({
-      email: request.session.email, name: request.session.name, picture: request.session.picture, csrf: request.session.csrf,
+      email: request.session.email || null, name: request.session.name, picture: request.session.picture, csrf: request.session.csrf,
+      level: request.level, via: request.session.via,
       counts: { postgres: config.postgres.length, redis: config.redis.length, http: config.http.length, railway: Boolean(config.railway.projectToken || config.railway.apiToken) },
       content: Boolean(config.content.apiUrl && config.content.token),
       files: Boolean(config.files.url && config.files.user && config.files.password),
@@ -73,7 +75,7 @@ export async function buildApp(options = {}) {
 
   await app.register(staticFiles, { root: fileURLToPath(new URL('../public', import.meta.url)), index: ['index.html'] });
   // Tiny hint for the page so a signed-out load doesn't flash the console shell.
-  app.get('/auth/state', async request => ({ signedIn: Boolean(readSession(request)) }));
+  app.get('/auth/state', async request => ({ signedIn: Boolean(readSession(request)), ward: wardSignIn(), google: googleSignIn() }));
 
   app.addHook('onClose', async () => { await closePostgres(); await closeRedis(); await closeDeltatime(); });
   return app;

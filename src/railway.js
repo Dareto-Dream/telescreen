@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { requireOwner } from './auth.js';
 import { config } from './config.js';
 import { audit } from './audit.js';
 
@@ -86,6 +87,7 @@ export async function railwayRoutes(app) {
   });
 
   app.post('/api/railway/deployment/:action', async request => {
+    requireOwner(request);
     const action = z.enum(Object.keys(ACTIONS)).parse(request.params.action);
     const { id } = deploymentId.parse(request.body);
     const deployment = await ownDeployment(id);

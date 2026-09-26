@@ -1,5 +1,7 @@
 import { config } from './config.js';
 import { audit } from './audit.js';
+import { actorOf } from './session.js';
+import { requireOwner } from './auth.js';
 
 // Ward account management goes through Ward's own /admin/v1 with
 // WARD_ADMIN_KEY, so Ward does the validation and keeps the audit trail.
@@ -14,6 +16,7 @@ const ALLOWED = [
   ['PATCH', /^users\/[0-9a-f-]{36}$/],
   ['DELETE', /^users\/[0-9a-f-]{36}$/],
   ['POST', /^users\/[0-9a-f-]{36}\/(suspend|unsuspend|logout|reset-mfa|password-reset)$/],
+  ['POST', /^users\/[0-9a-f-]{36}\/admin-level$/],
   ['DELETE', /^users\/[0-9a-f-]{36}\/sessions\/\d{1,18}$/],
   ['DELETE', /^users\/[0-9a-f-]{36}\/identities\/(google|github|discord)$/],
   ['DELETE', /^users\/[0-9a-f-]{36}\/grants\/[\w.-]{1,100}$/],
@@ -24,6 +27,13 @@ const ALLOWED = [
   ['POST', /^clients\/[\w.-]{1,100}\/rotate-secret$/],
   ['GET', /^audit$/],
 ];
+// Owners only: staff levels, and anything that deletes or re-keys.
+const OWNER_ONLY = [
+  ['POST', /^users\/[0-9a-f-]{36}\/admin-level$/],
+  ['DELETE', /^users\/[0-9a-f-]{36}$/],
+  ['DELETE', /^clients\/[\w.-]{1,100}$/],
+  ['POST', /^clients\/[\w.-]{1,100}\/rotate-secret$/],
+];
 
 async function ward(request, path) {
   if (!enabled()) { const e = new Error('Set WARD_URL and WARD_ADMIN_KEY to manage Ward accounts'); e.statusCode = 503; throw e; }
@@ -32,7 +42,7 @@ async function ward(request, path) {
   const hasBody = !['GET', 'HEAD'].includes(request.method) && request.body !== undefined;
   const response = await fetch(url, {
     method: request.method,
-    headers: { Authorization: `Bearer ${config.ward.key}`, 'X-Ward-Actor': request.session.email, Accept: 'application/json', ...(hasBody ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { Authorization: `Bearer ${config.ward.key}`, 'X-Ward-Actor': actorOf(request.session), Accept: 'application/json', ...(hasBody ? { 'Content-Type': 'application/json' } : {}) },
     body: hasBody ? JSON.stringify(request.body) : undefined,
     redirect: 'error',
     signal: AbortSignal.timeout(20_000),
@@ -55,6 +65,7 @@ export async function wardRoutes(app) {
     handler: async (request, reply) => {
       const path = request.params['*'];
       if (!ALLOWED.some(([m, re]) => m === request.method && re.test(path))) return reply.code(404).send({ error: 'Unknown Ward route' });
+      if (OWNER_ONLY.some(([m, re]) => m === request.method && re.test(path))) requireOwner(request);
       if (request.method !== 'GET') audit(request, `ward.${request.method.toLowerCase()}`, { path });
       const { status, data } = await ward(request, path);
       return reply.code(status).send(data);

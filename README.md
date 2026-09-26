@@ -14,7 +14,9 @@ Styles come from `css.deltavdevs.com`. The client uses no framework and has no b
 
 ## Security model
 
-- **Sign-in:** Google OAuth with PKCE and state. The account must have a verified email listed in `ADMIN_EMAILS`, and the allowlist is re-checked on every request.
+- **Sign-in:** "Continue with Ward" (PKCE, state, and the `iss` check). The Ward account needs staff level `admin` or `owner`, read from the `admin` scope. Telescreen re-checks the level with Ward's admin API (cached a minute), so a demotion or suspension ends the session; if Ward is unreachable it keeps the session's level so Telescreen still works in an outage.
+- **Owner-only:** setting staff levels, deleting Ward accounts or apps, rotating an app's secret, writing SQL, raw Redis commands, and Railway redeploys/restarts.
+- **Google backup:** while Ward sign-in is new, Google + `ADMIN_EMAILS` still works (allowlisted people count as owners). Remove `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`ADMIN_EMAILS` to turn it off.
 - **Sessions:** a stateless HMAC-signed `__Host-` cookie (SameSite=Strict, httpOnly, 12h by default). Telescreen does not depend on the Redis or Postgres it administers. To revoke all sessions, rotate `SESSION_SECRET`.
 - **Writes:** every write requires a same-origin request and a per-session CSRF header.
 - **Secrets:** backend, WebDAV, DeltaTime and Railway credentials are only in server env. The browser never sees them; tests assert this.
@@ -26,7 +28,9 @@ Styles come from `css.deltavdevs.com`. The client uses no framework and has no b
 
 Copy `.env.example` and fill it in. On Railway, point connections at the other services with reference variables, for example `TELESCREEN_PG_MAIN=${{Postgres.DATABASE_URL}}`.
 
-**Google:** in the OAuth client, add the redirect URI `https://telescreen.deltavdevs.com/auth/google/callback`. You can reuse the blog's client.
+**Ward:** create a first-party Ward app with scopes `openid profile email admin`, redirect URI `https://telescreen.deltavdevs.com/auth/ward/callback`, then set `WARD_CLIENT_ID` and `WARD_CLIENT_SECRET` (alongside `WARD_URL` and `WARD_ADMIN_KEY`).
+
+**Google (backup):** in the OAuth client, add the redirect URI `https://telescreen.deltavdevs.com/auth/google/callback`. You can reuse the blog's client.
 
 **DeltaTime:** sign into DeltaTime as your admin user and create an admin API key at `/admin/admin_api_keys`. Set it as `DELTATIME_ADMIN_KEY`. Verdicts are attributed to that key's owner.
 
