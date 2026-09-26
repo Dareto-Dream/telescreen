@@ -5,12 +5,15 @@ import http from 'node:http';
 // A fake upstream standing in for the main backend, CDN WebDAV and DeltaTime,
 // so we can check what telescreen actually sends and that secrets stay server-side.
 const seen = [];
+const SUB = '44444444-4444-4444-8444-444444444444';
 const upstream = http.createServer((req, res) => {
   let body = '';
   req.on('data', c => { body += c; });
   req.on('end', () => {
     seen.push({ method: req.method, url: req.url, auth: req.headers.authorization, body, headers: req.headers });
     res.setHeader('Content-Type', 'application/json');
+    // Ward's level check for the signed-in test admin.
+    if (req.url === `/admin/v1/users/${SUB}`) return res.end(JSON.stringify({ user: { admin_level: 'owner', suspended_at: null } }));
     if (req.url.startsWith('/api/admin/v1/check')) return res.end(JSON.stringify({ valid: true, creator: { id: 1, username: 'boss', admin_level: 'ultraadmin' } }));
     if (req.url.startsWith('/api/admin/v1/user/convict')) return res.end(JSON.stringify({ success: true, message: 'gotcha' }));
     if (req.method === 'PROPFIND') {
@@ -29,9 +32,6 @@ const base = `http://127.0.0.1:${upstream.address().port}`;
 
 process.env.NODE_ENV = 'test';
 process.env.SESSION_SECRET = 'y'.repeat(48);
-process.env.ADMIN_EMAILS = 'boss@example.com';
-process.env.GOOGLE_CLIENT_ID = 'id';
-process.env.GOOGLE_CLIENT_SECRET = 'secret';
 process.env.PUBLIC_URL = 'http://localhost:3998';
 process.env.MAIN_API_URL = base;
 process.env.MAIN_ADMIN_TOKEN = 'main-admin-token';
@@ -42,13 +42,15 @@ process.env.DELTATIME_URL = base;
 process.env.DELTATIME_ADMIN_KEY = 'dt-admin-key';
 process.env.WARD_URL = base;
 process.env.WARD_ADMIN_KEY = 'ward-admin-key';
+process.env.WARD_CLIENT_ID = 'telescreen-app';
+process.env.WARD_CLIENT_SECRET = 'app-secret';
 
 const { buildApp } = await import('../src/server.js');
 const { seal, SESSION_COOKIE } = await import('../src/session.js');
 let app;
 before(async () => { app = await buildApp({ logger: false }); });
 after(async () => { await app.close(); upstream.close(); });
-const headers = { cookie: `${SESSION_COOKIE}=${seal('session', { email: 'boss@example.com', csrf: 'c' }, 3600)}`, 'x-telescreen-csrf': 'c' };
+const headers = { cookie: `${SESSION_COOKIE}=${seal('session', { via: 'ward', sub: SUB, level: 'owner', email: 'boss@example.com', csrf: 'c' }, 3600)}`, 'x-telescreen-csrf': 'c' };
 
 test('content proxy injects the backend admin token and never returns it', async () => {
   const res = await app.inject({ method: 'GET', url: '/api/content/projects', headers });

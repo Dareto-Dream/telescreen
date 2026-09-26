@@ -37,17 +37,13 @@ export function unseal(purpose, value) {
   }
 }
 
-export const isAdmin = email => typeof email === 'string' && config.adminEmails.includes(email.toLowerCase());
-
 // Ward admin levels that may use telescreen. Viewers are read-only staff (analytics).
 export const CONSOLE_LEVELS = ['admin', 'owner'];
 
 export function readSession(request) {
   const session = unseal('session', request.cookies[SESSION_COOKIE]);
-  if (!session) return null;
-  if (session.via === 'ward') return typeof session.sub === 'string' && CONSOLE_LEVELS.includes(session.level) ? session : null;
-  // Google backup: re-check the allowlist every request. Allowlisted people are the owners.
-  return isAdmin(session.email) ? { ...session, via: 'google', level: 'owner' } : null;
+  if (!session || session.via !== 'ward') return null;
+  return typeof session.sub === 'string' && CONSOLE_LEVELS.includes(session.level) ? session : null;
 }
 
 // Who to name in audit logs and in Ward's X-Ward-Actor.

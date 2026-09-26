@@ -7,7 +7,6 @@ import { ZodError } from 'zod';
 import { config, assertConfig } from './config.js';
 import { authRoutes, guard } from './auth.js';
 import { readSession } from './session.js';
-import { wardSignIn, googleSignIn } from './config.js';
 import { postgresRoutes, closePostgres } from './postgres.js';
 import { redisRoutes, closeRedis } from './redis.js';
 import { railwayRoutes } from './railway.js';
@@ -75,7 +74,7 @@ export async function buildApp(options = {}) {
 
   await app.register(staticFiles, { root: fileURLToPath(new URL('../public', import.meta.url)), index: ['index.html'] });
   // Tiny hint for the page so a signed-out load doesn't flash the console shell.
-  app.get('/auth/state', async request => ({ signedIn: Boolean(readSession(request)), ward: wardSignIn(), google: googleSignIn() }));
+  app.get('/auth/state', async request => ({ signedIn: Boolean(readSession(request)) }));
 
   app.addHook('onClose', async () => { await closePostgres(); await closeRedis(); await closeDeltatime(); });
   return app;

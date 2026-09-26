@@ -15,15 +15,12 @@ function collect(prefix) {
 }
 
 const publicUrl = (env.PUBLIC_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/+$/, '');
-const adminEmails = (env.ADMIN_EMAILS || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean);
 
 export const config = {
   production,
   port: Number(env.PORT || 3000),
   publicUrl,
   origin: new URL(publicUrl).origin,
-  google: { id: env.GOOGLE_CLIENT_ID || '', secret: env.GOOGLE_CLIENT_SECRET || '' },
-  adminEmails,
   sessionSecret: env.SESSION_SECRET || '',
   sessionHours: Math.min(Math.max(Number(env.SESSION_HOURS || 12), 1), 72),
   postgres: collect('TELESCREEN_PG_'),
@@ -63,14 +60,12 @@ export const config = {
 };
 
 export const wardSignIn = () => Boolean(config.ward.url && config.ward.clientId && config.ward.clientSecret && config.ward.key);
-// Google + ADMIN_EMAILS is the backup way in while Ward sign-in is new.
-export const googleSignIn = () => Boolean(config.google.id && config.google.secret && config.adminEmails.length);
 
 // Fail closed: an admin console with no way to check who's an admin, or a weak signing key, must not boot.
 export function assertConfig() {
   const problems = [];
   if (config.sessionSecret.length < 32) problems.push('SESSION_SECRET must be at least 32 characters');
-  if (!wardSignIn() && !googleSignIn()) problems.push('set WARD_URL, WARD_ADMIN_KEY, WARD_CLIENT_ID and WARD_CLIENT_SECRET (or, as a backup, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and ADMIN_EMAILS)');
+  if (!wardSignIn()) problems.push('set WARD_URL, WARD_ADMIN_KEY, WARD_CLIENT_ID and WARD_CLIENT_SECRET (sign-in and admin levels come from Ward)');
   if (config.production && !config.publicUrl.startsWith('https://')) problems.push('PUBLIC_URL must be https in production');
   if (problems.length) throw new Error(`telescreen refuses to start:\n - ${problems.join('\n - ')}`);
 }

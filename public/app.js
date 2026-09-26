@@ -113,10 +113,8 @@ function buildNav(pg, redis) {
 }
 
 // ---------- boot ----------
-function showLogin(state = {}) {
+function showLogin() {
   me = null;
-  $('#login-ward').hidden = !state.ward;
-  $('#login-google').hidden = !state.google;
   $('#shell').hidden = true; $('#login').hidden = false;
   const error = new URLSearchParams(location.search).get('error');
   if (error) { $('#login-error').textContent = error; $('#login-error').hidden = false; history.replaceState(null, '', '/'); }
@@ -124,7 +122,7 @@ function showLogin(state = {}) {
 
 async function boot() {
   const state = await fetch('/auth/state').then(r => r.json()).catch(() => ({ signedIn: false }));
-  if (!state.signedIn) return showLogin(state);
+  if (!state.signedIn) return showLogin();
   me = await api('GET', '/api/me');
   $('#login').hidden = true; $('#shell').hidden = false;
   $('#me').replaceChildren(me.picture ? h('img', { src: me.picture, alt: '', referrerpolicy: 'no-referrer' }) : null, h('span', { title: me.email || me.name }, `${me.email || me.name} · ${me.level}`));

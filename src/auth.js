@@ -1,11 +1,7 @@
-import { config, wardSignIn, googleSignIn } from './config.js';
-import { SESSION_COOKIE, OAUTH_COOKIE, cookieOptions, seal, unseal, token, challenge, equal, isAdmin, readSession, CONSOLE_LEVELS } from './session.js';
+import { config, wardSignIn } from './config.js';
+import { SESSION_COOKIE, OAUTH_COOKIE, cookieOptions, seal, unseal, token, challenge, equal, readSession, CONSOLE_LEVELS } from './session.js';
 import { audit } from './audit.js';
 
-const GOOGLE_AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth';
-const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
-const GOOGLE_USERINFO = 'https://openidconnect.googleapis.com/v1/userinfo';
-const callbackUrl = () => `${config.publicUrl}/auth/google/callback`;
 
 // Tiny in-memory limiter; one instance, one admin, no need for Redis here.
 const hits = new Map();
@@ -81,76 +77,14 @@ export async function authRoutes(app) {
       return bounce(reply, 'Ward sign-in failed. Try again.');
     }
     if (typeof profile.sub !== 'string' || !CONSOLE_LEVELS.includes(profile.admin_level)) {
-      audit(request, 'auth.denied', { sub: profile.sub || null, level: profile.admin_level ?? null, via: 'ward' });
+      audit(request, 'auth.denied', { sub: profile.sub || null, admin_level: profile.admin_level ?? null, via: 'ward' });
       return bounce(reply, 'That Ward account is not a telescreen admin.');
     }
     const email = typeof profile.email === 'string' ? profile.email.toLowerCase() : null;
     startSession(reply, { via: 'ward', sub: profile.sub, level: profile.admin_level, email,
       name: String(profile.name || profile.preferred_username || 'Admin').slice(0, 80), picture: typeof profile.picture === 'string' ? profile.picture : null });
     levels.set(profile.sub, { level: profile.admin_level, at: Date.now() });
-    audit(request, 'auth.login', { sub: profile.sub, email, level: profile.admin_level, via: 'ward' });
-    return reply.redirect('/');
-  });
-
-  // ---------- Google (backup while Ward sign-in is new) ----------
-  app.get('/auth/google/start', async (request, reply) => {
-    if (!googleSignIn()) return bounce(reply, 'Google sign-in is turned off. Use Ward.');
-    if (limited(`start:${request.ip}`, 30, 15 * 60_000)) return bounce(reply, 'Too many sign-in attempts. Wait a few minutes.');
-    const state = token(), verifier = token(), nonce = token();
-    reply.setCookie(OAUTH_COOKIE, seal('oauth', { state, verifier, nonce }, 600), { ...cookieOptions, maxAge: 600 });
-    const url = new URL(GOOGLE_AUTHORIZE);
-    url.search = new URLSearchParams({
-      client_id: config.google.id,
-      redirect_uri: callbackUrl(),
-      response_type: 'code',
-      scope: 'openid email profile',
-      state,
-      nonce,
-      code_challenge: challenge(verifier),
-      code_challenge_method: 'S256',
-      prompt: 'select_account',
-    }).toString();
-    return reply.redirect(url.toString());
-  });
-
-  app.get('/auth/google/callback', async (request, reply) => {
-    if (!googleSignIn()) return bounce(reply, 'Google sign-in is turned off. Use Ward.');
-    if (limited(`callback:${request.ip}`, 30, 15 * 60_000)) return bounce(reply, 'Too many sign-in attempts. Wait a few minutes.');
-    const pending = unseal('oauth', request.cookies[OAUTH_COOKIE]);
-    const { state, code, error } = request.query || {};
-    if (error) return bounce(reply, 'Google sign-in was cancelled.');
-    if (!pending || typeof state !== 'string' || typeof code !== 'string' || code.length > 2000 || !equal(state, pending.state)) {
-      return bounce(reply, 'Sign-in expired or could not be verified. Try again.');
-    }
-    let profile;
-    try {
-      const exchange = await fetchJSON(GOOGLE_TOKEN, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-        body: new URLSearchParams({
-          client_id: config.google.id,
-          client_secret: config.google.secret,
-          grant_type: 'authorization_code',
-          code,
-          code_verifier: pending.verifier,
-          redirect_uri: callbackUrl(),
-        }),
-      });
-      if (!exchange.access_token) throw new Error('No access token');
-      // The userinfo call goes straight to Google over TLS with the token we just
-      // exchanged server-side, so its claims are trusted without JWT verification.
-      profile = await fetchJSON(GOOGLE_USERINFO, { headers: { Authorization: `Bearer ${exchange.access_token}` } });
-    } catch (err) {
-      request.log.warn({ err: err.message }, 'google exchange failed');
-      return bounce(reply, 'Google sign-in failed. Try again.');
-    }
-    const email = typeof profile.email === 'string' ? profile.email.toLowerCase() : '';
-    if (profile.email_verified !== true || !isAdmin(email)) {
-      audit(request, 'auth.denied', { email: email || null });
-      return bounce(reply, 'That Google account is not allowed on the telescreen.');
-    }
-    startSession(reply, { via: 'google', email, name: String(profile.name || email).slice(0, 80), picture: typeof profile.picture === 'string' ? profile.picture : null });
-    audit(request, 'auth.login', { email, via: 'google' });
+    audit(request, 'auth.login', { sub: profile.sub, email, admin_level: profile.admin_level, via: 'ward' });
     return reply.redirect('/');
   });
 

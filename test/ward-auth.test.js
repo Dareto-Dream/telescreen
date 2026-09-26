@@ -1,7 +1,7 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-// Ward sign-in, with a fake Ward behind fetch. Google backup is off here.
+// Ward sign-in, with a fake Ward behind fetch.
 process.env.NODE_ENV = 'test';
 process.env.SESSION_SECRET = 'y'.repeat(48);
 process.env.PUBLIC_URL = 'http://localhost:3998';
@@ -9,7 +9,6 @@ process.env.WARD_URL = 'https://ward.test';
 process.env.WARD_ADMIN_KEY = 'admin-key';
 process.env.WARD_CLIENT_ID = 'telescreen-app';
 process.env.WARD_CLIENT_SECRET = 'app-secret';
-delete process.env.ADMIN_EMAILS; delete process.env.GOOGLE_CLIENT_ID; delete process.env.GOOGLE_CLIENT_SECRET;
 
 // Fake Ward: token exchange, userinfo, and the admin API's user lookup.
 const ward = { level: 'admin', live: 'admin', down: false, suspended: false, calls: [] };
@@ -48,10 +47,8 @@ let n = 0;
 const fresh = () => `22222222-2222-4222-8222-${String(++n).padStart(12, '0')}`;
 beforeEach(() => { Object.assign(ward, { level: 'admin', live: 'admin', down: false, suspended: false, calls: [] }); });
 
-test('the sign-in page offers Ward only when Google is off', async () => {
-  assert.deepEqual((await app.inject({ method: 'GET', url: '/auth/state' })).json(), { signedIn: false, ward: true, google: false });
-  const google = await app.inject({ method: 'GET', url: '/auth/google/start' });
-  assert.match(google.headers.location, /^\/\?error=/);
+test('signed out, /auth/state says so', async () => {
+  assert.deepEqual((await app.inject({ method: 'GET', url: '/auth/state' })).json(), { signedIn: false });
 });
 
 test('ward start asks for the admin scope with PKCE', async () => {
@@ -69,7 +66,7 @@ const callback = (query, extra = {}) => {
 };
 const sessionSet = res => new RegExp(`${SESSION_COOKIE}=[^;]`).test(String(res.headers['set-cookie'] || ''));
 
-test('callback refuses a wrong issuer, a wrong state, a Google cookie, and viewers', async () => {
+test('callback refuses a wrong issuer, a wrong state, a non-Ward cookie, and viewers', async () => {
   assert.equal(sessionSet(await callback({ state: 'st', code: 'good-code', iss: 'https://evil.test' })), false);
   assert.equal(sessionSet(await callback({ state: 'nope', code: 'good-code', iss: 'https://ward.test' })), false);
   assert.equal(sessionSet(await callback({ state: 'st', code: 'good-code', iss: 'https://ward.test' }, { via: 'google' })), false);
