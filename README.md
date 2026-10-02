@@ -29,6 +29,8 @@ Copy `.env.example` and fill it in. On Railway, point connections at the other s
 
 **Ward:** create a first-party Ward app with scopes `openid profile email admin`, redirect URI `https://telescreen.deltavdevs.com/auth/ward/callback`, then set `WARD_CLIENT_ID` and `WARD_CLIENT_SECRET` (alongside `WARD_URL` and `WARD_ADMIN_KEY`).
 
+**Search:** set `SEARCH_URL` (`https://search.deltavdevs.com`) and `SEARCH_ADMIN_KEY` (the same value as the `SEARCH_ADMIN_KEY` variable on the search service). The Search section shows the crawler and index, starts crawls with their own limits (pages, depth, delay, scope), edits seeds and the blocklist, reviews opt-outs and issues API keys. Purging, index rebuilds, opt-out approvals and key changes are owner-only.
+
 **DeltaTime:** sign into DeltaTime as your admin user and create an admin API key at `/admin/admin_api_keys`. Set it as `DELTATIME_ADMIN_KEY`. Verdicts are attributed to that key's owner.
 
 ```sh

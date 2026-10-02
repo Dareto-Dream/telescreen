@@ -15,6 +15,7 @@ import { contentRoutes } from './content.js';
 import { fileRoutes } from './files.js';
 import { deltatimeRoutes, closeDeltatime } from './deltatime.js';
 import { wardRoutes } from './ward.js';
+import { searchRoutes } from './search.js';
 
 const THEME = 'https://css.deltavdevs.com';
 
@@ -60,12 +61,14 @@ export async function buildApp(options = {}) {
       level: request.level, via: request.session.via,
       counts: { postgres: config.postgres.length, redis: config.redis.length, http: config.http.length, railway: Boolean(config.railway.projectToken || config.railway.apiToken) },
       content: Boolean(config.content.apiUrl && config.content.token),
+      search: Boolean(config.search.url && config.search.key),
       files: Boolean(config.files.url && config.files.user && config.files.password),
     }));
     await api.register(contentRoutes);
     await api.register(fileRoutes);
     await api.register(deltatimeRoutes);
     await api.register(wardRoutes);
+    await api.register(searchRoutes);
     await api.register(postgresRoutes);
     await api.register(redisRoutes);
     await api.register(railwayRoutes);

@@ -160,6 +160,15 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .workspace-note { align-items: flex-start; flex-direction: column; }
 }
 
+/* ---------- search ---------- */
+.meter { height: 0.5rem; background: var(--sunken); border-radius: var(--radii-full); overflow: hidden; min-width: 6rem; }
+.meter > div { height: 100%; background: var(--primary); border-radius: var(--radii-full); min-width: 1px; }
+.meter.warn > div { background: var(--yellow); }
+.meter.full > div { background: var(--red); }
+.search-urls { min-height: 8rem; }
+.pill.green { background: var(--green); color: var(--darker); }
+.preset-row { display: flex; gap: var(--spacing-1); flex-wrap: wrap; align-items: center; }
+
 /* ---------- ward ---------- */
 .ward-secret { user-select: all; white-space: normal !important; word-break: break-all; text-align: left !important; }
 .ward-select { user-select: all; }

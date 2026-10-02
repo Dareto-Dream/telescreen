@@ -50,6 +50,11 @@ export const config = {
     clientId: env.WARD_CLIENT_ID || '',
     clientSecret: env.WARD_CLIENT_SECRET || '',
   },
+  // The search engine (search.deltavdevs.com), run over its /admin/v1.
+  search: {
+    url: (env.SEARCH_URL || '').replace(/\/+$/, ''),
+    key: env.SEARCH_ADMIN_KEY || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',
