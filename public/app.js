@@ -102,7 +102,7 @@ function buildNav(pg, redis) {
     h('div', { class: 'nav-group' }, 'Moderate'),
     link('/deltatime', 'Account review'),
     h('div', { class: 'nav-group' }, 'Search'),
-    link('/search', 'Search engine'),
+    link('/search/engine', 'Search engine'),
     link('/search/crawls', 'Crawls'),
     link('/search/sources', 'Seeds & blocklist'),
     link('/search/optouts', 'Opt-outs'),

@@ -167,6 +167,9 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .meter.full > div { background: var(--red); }
 .search-urls { min-height: 8rem; }
 .pill.green { background: var(--green); color: var(--darker); }
+.row > input, .row > select { width: auto; flex: 1 1 11rem; }
+.row > input.ward-search { flex: 3 1 18rem; }
+.row > input[type=number] { flex: 0 1 8rem; }
 .preset-row { display: flex; gap: var(--spacing-1); flex-wrap: wrap; align-items: center; }
 
 /* ---------- ward ---------- */

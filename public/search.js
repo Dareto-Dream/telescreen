@@ -1,7 +1,7 @@
 // Search engine admin. Every write goes through the search service's /admin/v1 (server side, with its own
 // key), which validates it, enforces the crawl limits and records it in its audit log under your email.
 
-const TABS = [['overview', 'Engine', '#/search'], ['crawls', 'Crawls', '#/search/crawls'], ['sources', 'Seeds & blocklist', '#/search/sources'], ['optouts', 'Opt-outs', '#/search/optouts'], ['keys', 'API keys', '#/search/keys']];
+const TABS = [['overview', 'Engine', '#/search/engine'], ['crawls', 'Crawls', '#/search/crawls'], ['sources', 'Seeds & blocklist', '#/search/sources'], ['optouts', 'Opt-outs', '#/search/optouts'], ['keys', 'API keys', '#/search/keys']];
 
 // One-click starting points for the crawl form. The server still enforces its own ceiling.
 const PRESETS = [
@@ -26,7 +26,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
     return h('div', { class: `meter${pct >= 100 ? ' full' : pct >= 85 ? ' warn' : ''}`, title: `${pct.toFixed(1)}%` }, fill);
   };
   const table = (rows, cols, empty = 'Nothing here.') => (rows.length
-    ? h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map(([name]) => h('th', {}, name)))), h('tbody', {}, rows.map(r => h('tr', {}, cols.map(([, fn]) => h('td', {}, fn(r))))))))
+    ? h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map(([name]) => h('th', {}, name)))), h('tbody', {}, rows.map(r => h('tr', {}, cols.map(([name, fn]) => h('td', { class: name === '' ? 'actions' : null }, fn(r))))))))
     : h('p', { class: 'empty' }, empty));
   const statusPill = s => h('span', { class: `pill ${s === 'running' ? 'green' : s === 'queued' || s === 'cancelling' ? 'yellow' : 'muted'}` }, s);
 
@@ -50,7 +50,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
   }
 
   // ---------------- engine overview ----------------
-  route(/^\/search$/, async () => {
+  route(/^\/search(?:\/engine)?$/, async () => {
     const s = await status(); if (!s) return;
     const st = s.status, cr = st.crawler || {}, ix = st.index || {}, b = cr.budget || {};
     const alive = cr.ts && Date.now() / 1000 - cr.ts < 90;
