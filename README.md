@@ -3,7 +3,8 @@
 The DeltaVDevs admin console, running at `https://telescreen.deltavdevs.com`. It replaces the old `/balls` admin suite on the main site, which now redirects here.
 
 - **Site content:** projects, songs, albums and staff, proxied to the main backend's `/api/admin/*`.
-- **CDN files:** browse, upload, move and delete on `cdn.deltavdevs.com` over WebDAV.
+- **CDN files:** browse, upload, move and delete on `cdn.deltavdevs.com` over WebDAV (the legacy CDN).
+- **Release CDN:** the Cloudflare R2 bucket behind `spectralis-cdn.deltavdevs.com`: how full it is against the storage cap, what is in it, and (owners) uploads to the `visualizers/` folder and deletes.
 - **Spectralis content:** the warnings and changelog the app and website show, the community list, and the verified creators whose signed capsules the app trusts, with each creator's permissions and avatar. Edits go to the Spectralis backend's admin API, which validates them.
 - **DeltaTime fraud review:** a queue of suspected, shadowbanned and convicted users, plus alt candidates (users sharing a machine and IP), IP/machine lookup, the trust audit log, and a per-user page with raw heartbeats and fingerprints. Verdicts and shadowbans go through DeltaTime's own `/api/admin/v1`, so its permission rules and `trust_level_audit_logs` apply.
 - **Postgres:** a table browser, row insert/edit/delete by primary key, and a SQL console that is read-only by default.
@@ -33,6 +34,8 @@ Copy `.env.example` and fill it in. On Railway, point connections at the other s
 **Search:** set `SEARCH_URL` (`https://search.deltavdevs.com`) and `SEARCH_ADMIN_KEY` (the same value as the `SEARCH_ADMIN_KEY` variable on the search service). The Search section shows the crawler and index, starts crawls with their own limits (pages, depth, delay, scope), edits seeds and the blocklist, reviews opt-outs and issues API keys. Purging, index rebuilds, opt-out approvals and key changes are owner-only.
 
 **Spectralis:** set `SPECTRALIS_URL` (`https://spectralis-api.deltavdevs.com`) and `SPECTRALIS_ADMIN_TOKEN` (the same value as `SPECTRALIS_ADMIN_TOKEN` on the Spectralis backend; the backend leaves its admin API off until it is set). Warnings, changelog and community are editable by admins. Creators and their capsule permissions, including revoking a key, are owner-only because they decide what a capsule is allowed to do on someone's machine. Avatars are PNG, JPEG or WebP up to 2 MB.
+
+**Release CDN:** set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` (an R2 API token's S3 key pair; scope it to the one bucket with Object Read & Write) and optionally `R2_BUCKET`, `R2_PUBLIC_URL` and `R2_BUDGET_GB`. R2 has no hard storage limit of its own and bills past 10 GB, so the page shows usage against a budget (5 GB by default, never more than 8 GB whatever the variable says) and an upload from here is refused if it would pass it. Uploads are limited to 8 MB and to the `visualizers/` folder; releases go up with `tools/r2/sync.mjs` in the Spectralis repo, which plans around the cap. Uploading and deleting are owner-only, and deletes need the file name typed back.
 
 **DeltaTime:** sign into DeltaTime as your admin user and create an admin API key at `/admin/admin_api_keys`. Set it as `DELTATIME_ADMIN_KEY`. Verdicts are attributed to that key's owner.
 

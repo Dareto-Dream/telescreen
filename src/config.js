@@ -60,6 +60,17 @@ export const config = {
     url: (env.SPECTRALIS_URL || 'https://spectralis-api.deltavdevs.com').replace(/\/+$/, ''),
     key: env.SPECTRALIS_ADMIN_TOKEN || '',
   },
+  // The release CDN: a Cloudflare R2 bucket reached over its S3 API. Telescreen shows usage against the storage
+  // budget (R2_BUDGET_GB, default 5, never more than 8) and lets an owner manage the visualizers folder.
+  r2: {
+    accountId: env.R2_ACCOUNT_ID || '',
+    accessKeyId: env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: env.R2_SECRET_ACCESS_KEY || '',
+    bucket: env.R2_BUCKET || 'spectralis-cdn',
+    publicUrl: (env.R2_PUBLIC_URL || 'https://spectralis-cdn.deltavdevs.com').replace(/\/+$/, ''),
+    budgetGb: Number(env.R2_BUDGET_GB || 5) || 5,
+    endpoint: env.R2_ENDPOINT || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',
