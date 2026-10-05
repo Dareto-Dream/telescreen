@@ -4,6 +4,7 @@ The DeltaVDevs admin console, running at `https://telescreen.deltavdevs.com`. It
 
 - **Site content:** projects, songs, albums and staff, proxied to the main backend's `/api/admin/*`.
 - **CDN files:** browse, upload, move and delete on `cdn.deltavdevs.com` over WebDAV.
+- **Spectralis content:** the warnings and changelog the app and website show, the community list, and the verified creators whose signed capsules the app trusts, with each creator's permissions and avatar. Edits go to the Spectralis backend's admin API, which validates them.
 - **DeltaTime fraud review:** a queue of suspected, shadowbanned and convicted users, plus alt candidates (users sharing a machine and IP), IP/machine lookup, the trust audit log, and a per-user page with raw heartbeats and fingerprints. Verdicts and shadowbans go through DeltaTime's own `/api/admin/v1`, so its permission rules and `trust_level_audit_logs` apply.
 - **Postgres:** a table browser, row insert/edit/delete by primary key, and a SQL console that is read-only by default.
 - **Redis:** SCAN browser, typed value viewer, string edit, TTL, rename, delete, and a raw command console.
@@ -30,6 +31,8 @@ Copy `.env.example` and fill it in. On Railway, point connections at the other s
 **Ward:** create a first-party Ward app with scopes `openid profile email admin`, redirect URI `https://telescreen.deltavdevs.com/auth/ward/callback`, then set `WARD_CLIENT_ID` and `WARD_CLIENT_SECRET` (alongside `WARD_URL` and `WARD_ADMIN_KEY`).
 
 **Search:** set `SEARCH_URL` (`https://search.deltavdevs.com`) and `SEARCH_ADMIN_KEY` (the same value as the `SEARCH_ADMIN_KEY` variable on the search service). The Search section shows the crawler and index, starts crawls with their own limits (pages, depth, delay, scope), edits seeds and the blocklist, reviews opt-outs and issues API keys. Purging, index rebuilds, opt-out approvals and key changes are owner-only.
+
+**Spectralis:** set `SPECTRALIS_URL` (`https://spectralis-api.deltavdevs.com`) and `SPECTRALIS_ADMIN_TOKEN` (the same value as `SPECTRALIS_ADMIN_TOKEN` on the Spectralis backend; the backend leaves its admin API off until it is set). Warnings, changelog and community are editable by admins. Creators and their capsule permissions, including revoking a key, are owner-only because they decide what a capsule is allowed to do on someone's machine. Avatars are PNG, JPEG or WebP up to 2 MB.
 
 **DeltaTime:** sign into DeltaTime as your admin user and create an admin API key at `/admin/admin_api_keys`. Set it as `DELTATIME_ADMIN_KEY`. Verdicts are attributed to that key's owner.
 

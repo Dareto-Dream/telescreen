@@ -55,6 +55,11 @@ export const config = {
     url: (env.SEARCH_URL || '').replace(/\/+$/, ''),
     key: env.SEARCH_ADMIN_KEY || '',
   },
+  // Spectralis (spectralis-api.deltavdevs.com) hosts its own warnings, changelog, community list and creators.
+  spectralis: {
+    url: (env.SPECTRALIS_URL || 'https://spectralis-api.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.SPECTRALIS_ADMIN_TOKEN || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',

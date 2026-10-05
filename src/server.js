@@ -16,6 +16,7 @@ import { fileRoutes } from './files.js';
 import { deltatimeRoutes, closeDeltatime } from './deltatime.js';
 import { wardRoutes } from './ward.js';
 import { searchRoutes } from './search.js';
+import { spectralisRoutes } from './spectralis.js';
 
 const THEME = 'https://css.deltavdevs.com';
 
@@ -30,7 +31,7 @@ export async function buildApp(options = {}) {
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", THEME, 'https://fonts.googleapis.com'],
         fontSrc: [THEME, 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https://lh3.googleusercontent.com', 'https://avatars.githubusercontent.com', 'https://cdn.discordapp.com', config.files.publicUrl],
+        imgSrc: ["'self'", 'data:', 'https://lh3.googleusercontent.com', 'https://avatars.githubusercontent.com', 'https://cdn.discordapp.com', config.files.publicUrl, config.spectralis.url],
         connectSrc: ["'self'"],
         formAction: ["'self'"],
         frameAncestors: ["'none'"],
@@ -62,6 +63,7 @@ export async function buildApp(options = {}) {
       counts: { postgres: config.postgres.length, redis: config.redis.length, http: config.http.length, railway: Boolean(config.railway.projectToken || config.railway.apiToken) },
       content: Boolean(config.content.apiUrl && config.content.token),
       search: Boolean(config.search.url && config.search.key),
+      spectralis: Boolean(config.spectralis.url && config.spectralis.key),
       files: Boolean(config.files.url && config.files.user && config.files.password),
     }));
     await api.register(contentRoutes);
@@ -69,6 +71,7 @@ export async function buildApp(options = {}) {
     await api.register(deltatimeRoutes);
     await api.register(wardRoutes);
     await api.register(searchRoutes);
+    await api.register(spectralisRoutes);
     await api.register(postgresRoutes);
     await api.register(redisRoutes);
     await api.register(railwayRoutes);
