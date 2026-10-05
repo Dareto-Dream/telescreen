@@ -38,7 +38,7 @@ function confirmBox(message, { danger = true, typed = null } = {}) {
     const dialog = h('dialog', {},
       h('p', { class: 'subheadline' }, message),
       typed ? h('label', {}, h('span', {}, 'Type ', h('code', {}, typed), ' to confirm'), input) : null,
-      h('div', { class: 'row end', style: 'margin-top: 1rem' }, h('button', { class: 'outline', type: 'button', onclick: () => { dialog.close(); resolve(false); } }, 'Cancel'), ok));
+      h('div', { class: 'row end spaced' }, h('button', { class: 'outline', type: 'button', onclick: () => { dialog.close(); resolve(false); } }, 'Cancel'), ok));
     ok.addEventListener('click', () => { if (typed && input.value !== typed) return input.focus(); dialog.close(); resolve(true); });
     dialog.addEventListener('close', () => { dialog.remove(); resolve(false); });
     document.body.append(dialog);
@@ -99,6 +99,7 @@ function buildNav(pg, redis) {
     link('/content/albums', 'Releases'),
     link('/content/staff', 'People'),
     link('/files', 'File library'),
+    link('/r2', 'Release CDN'),
     h('div', { class: 'nav-group' }, 'Moderate'),
     link('/deltatime', 'Account review'),
     h('div', { class: 'nav-group' }, 'Search'),
@@ -587,6 +588,9 @@ import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fa
 });
 import('./search.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot, me: () => me })).catch(() => {
   route(/^\/search(?:\/.*)?$/, async () => mount(head('search', 'Search engine'), h('div', { class: 'notice warn' }, 'Search module failed to load.')));
+});
+import('./r2.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/r2(?:[?].*)?$/, async () => mount(head('release cdn', 'Release CDN'), h('div', { class: 'notice warn' }, 'Release CDN module failed to load.')));
 });
 import('./spectralis.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/spectralis(?:\/.*)?$/, async () => mount(head('spectralis', 'Spectralis'), h('div', { class: 'notice warn' }, 'Spectralis module failed to load.')));
