@@ -183,3 +183,10 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .ward-avatar { width: 72px; height: 72px; border-radius: var(--radii-full); object-fit: cover; }
 textarea.ward-uris { min-height: 5rem; }
 textarea.ward-uris.short { min-height: 3rem; }
+
+/* ---------- spectralis ---------- */
+.avatar { object-fit: cover; flex: none; background: var(--sunken); border: var(--rule) solid var(--border); }
+details.card > summary { cursor: pointer; display: flex; gap: var(--spacing-1); align-items: center; flex-wrap: wrap; }
+.spaced { margin-top: var(--spacing-2); }
+label.check { display: flex; flex-direction: row; align-items: center; gap: var(--spacing-1); font-weight: var(--font-weight-normal); text-transform: none; letter-spacing: 0; }
+label.check > span { display: inline; }

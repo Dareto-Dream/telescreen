@@ -107,6 +107,11 @@ function buildNav(pg, redis) {
     link('/search/sources', 'Seeds & blocklist'),
     link('/search/optouts', 'Opt-outs'),
     link('/search/keys', 'API keys'),
+    h('div', { class: 'nav-group' }, 'Spectralis'),
+    link('/spectralis/warnings', 'Warnings'),
+    link('/spectralis/changelog', 'Changelog'),
+    link('/spectralis/community', 'Community'),
+    link('/spectralis/creators', 'Verified creators'),
     h('div', { class: 'nav-group' }, 'Ward'),
     link('/ward/accounts', 'Accounts'),
     link('/ward/apps', 'Apps'),
@@ -582,6 +587,9 @@ import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fa
 });
 import('./search.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot, me: () => me })).catch(() => {
   route(/^\/search(?:\/.*)?$/, async () => mount(head('search', 'Search engine'), h('div', { class: 'notice warn' }, 'Search module failed to load.')));
+});
+import('./spectralis.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/spectralis(?:\/.*)?$/, async () => mount(head('spectralis', 'Spectralis'), h('div', { class: 'notice warn' }, 'Spectralis module failed to load.')));
 });
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
   route(/^\/deltatime(?:\/.*)?$/, async () => mount(head('deltatime', 'Fraud review'), h('div', { class: 'notice warn' }, 'DeltaTime module failed to load.')));
