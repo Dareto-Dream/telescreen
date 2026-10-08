@@ -18,6 +18,7 @@ import { wardRoutes } from './ward.js';
 import { searchRoutes } from './search.js';
 import { spectralisRoutes } from './spectralis.js';
 import { journeymanRoutes } from './journeyman.js';
+import { bouncerRoutes } from './bouncer.js';
 import { r2Routes } from './r2.js';
 
 const THEME = 'https://css.deltavdevs.com';
@@ -77,6 +78,7 @@ export async function buildApp(options = {}) {
     await api.register(searchRoutes);
     await api.register(spectralisRoutes);
     await api.register(journeymanRoutes);
+    await api.register(bouncerRoutes);
     await api.register(r2Routes);
     await api.register(postgresRoutes);
     await api.register(redisRoutes);

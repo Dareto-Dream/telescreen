@@ -84,6 +84,11 @@ export const config = {
     siteUrl: (env.JOURNEYMAN_URL || 'https://journeyman.deltavdevs.com').replace(/\/+$/, ''),
     siteKey: env.JOURNEYMAN_ADMIN_KEY || '',
   },
+  // Bouncer, the DeltaVDevs Discord bot, run over its /admin/v1.
+  bouncer: {
+    url: (env.BOUNCER_URL || 'https://bouncer.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.BOUNCER_ADMIN_KEY || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',
