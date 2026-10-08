@@ -21,6 +21,16 @@ const ROUTES = [
   ['POST', /^sync$/, false],
   ['DELETE', /^templates\/[a-z0-9][a-z0-9-]{0,39}$/, false],
   ['GET', /^audit$/, false],
+  // Inside a server, people, network bans and appeals.
+  ['GET', new RegExp(`^guilds/${SNOWFLAKE}/(detail|members|bans)$`), false],
+  ['POST', new RegExp(`^guilds/${SNOWFLAKE}/members/${SNOWFLAKE}/(kick|timeout|untimeout|role-add|role-remove|ban|unban)$`), false],
+  ['POST', new RegExp(`^guilds/${SNOWFLAKE}/message$`), false],
+  ['GET', new RegExp(`^users/${SNOWFLAKE}$`), false],
+  ['GET', /^network-bans$/, false],
+  ['POST', /^network-bans$/, false],
+  ['POST', new RegExp(`^network-bans/${SNOWFLAKE}/lift$`), false],
+  ['GET', /^appeals$/, false],
+  ['POST', /^appeals\/[0-9a-f-]{36}\/decide$/, false],
 ];
 
 export async function bouncerRoutes(app) {
@@ -42,7 +52,8 @@ export async function bouncerRoutes(app) {
         headers: { Authorization: `Bearer ${config.bouncer.key}`, 'X-Admin-Actor': actorOf(request.session) || 'telescreen', Accept: 'application/json', ...(hasBody ? { 'Content-Type': 'application/json' } : {}) },
         body: hasBody ? JSON.stringify(request.body) : undefined,
         redirect: 'error',
-        signal: AbortSignal.timeout(60_000),
+        // A mass ban walks every server for every person, so give it time.
+        signal: AbortSignal.timeout(300_000),
       });
       const data = await response.json().catch(() => ({}));
       if (request.method !== 'GET') audit(request, `bouncer.${request.method.toLowerCase()}`, { path });

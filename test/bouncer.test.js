@@ -61,3 +61,25 @@ test('paths outside the list never reach Bouncer', async () => {
   const res = await app.inject({ method: 'GET', url: '/api/bouncer/overview', headers: admin });
   assert.ok(!res.body.includes('bouncer-key'));
 });
+
+test('moderation routes are forwarded; ids and actions outside the list are not', async () => {
+  seen.length = 0;
+  for (const [method, url, payload] of [
+    ['POST', '/api/bouncer/network-bans', { ids: '123456789012345678', reason: 'raid' }],
+    ['POST', '/api/bouncer/network-bans/123456789012345678/lift', {}],
+    ['POST', '/api/bouncer/guilds/123456789012345678/members/223456789012345678/kick', {}],
+    ['POST', '/api/bouncer/appeals/0a1b2c3d-0000-4000-8000-000000000000/decide', { approve: true }],
+    ['GET', '/api/bouncer/users/123456789012345678'],
+  ]) {
+    const res = await app.inject({ method, url, headers: admin, payload });
+    assert.equal(res.statusCode, 200, url);
+  }
+  for (const url of ['/api/bouncer/guilds/123456789012345678/members/223456789012345678/nuke', '/api/bouncer/network-bans/abc/lift', '/api/bouncer/appeals/x/decide']) {
+    const res = await app.inject({ method: 'POST', url, headers: admin, payload: {} });
+    assert.equal(res.statusCode, 404, url);
+  }
+  // The fake Ward and fake Bouncer share one server, so the lookup's /admin/v1/users/<id> is counted separately.
+  assert.equal(forwarded().length, 4);
+  assert.ok(seen.some(x => x.url === '/admin/v1/users/123456789012345678' && x.auth === 'Bearer bouncer-key-0123456789'));
+  assert.deepEqual(JSON.parse(forwarded()[0].body), { ids: '123456789012345678', reason: 'raid' });
+});
