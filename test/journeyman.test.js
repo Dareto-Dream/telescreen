@@ -7,6 +7,7 @@ import http from 'node:http';
 // neither secret ever reaches the browser.
 const seen = [];
 const ADMIN = '66666666-6666-4666-8666-666666666666';
+const OWNER = '77777777-7777-4777-8777-777777777777';
 const subs = [
   { id: 'a1', answers: { username: 'Steve', edition: 'java', playstyle: 'x' }, status: 'pending', ward_sub: 'w1', ward_email: 's@x.y', ward_name: 'S', created_at: '2026-10-08 01:00:00', banned: false },
   { id: 'a2', answers: { username: 'Alex', edition: 'bedrock' }, status: 'approved', ward_sub: 'w2', created_at: '2026-10-09 01:00:00', banned: false },
@@ -21,9 +22,11 @@ const upstream = http.createServer((req, res) => {
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
     seen.push({ method: req.method, url: req.url, auth: req.headers.authorization, body });
     res.setHeader('Content-Type', 'application/json');
+    if (req.url === `/admin/v1/users/${OWNER}`) return res.end(JSON.stringify({ user: { admin_level: 'owner', suspended_at: null } }));
     if (req.url === `/admin/v1/users/${ADMIN}`) return res.end(JSON.stringify({ user: { admin_level: 'admin', suspended_at: null } }));
     if (req.url === '/internal/forms/journeyman-season-1/submissions') return res.end(JSON.stringify({ submissions: subs }));
     if (req.url === '/internal/forms/journeyman-season-1/bans' && req.method === 'GET') return res.end(JSON.stringify({ bans: [] }));
+    if (req.url === '/admin/v1/season') return res.end(JSON.stringify({ settings: { season: 1, launchAt: '2027-01-01T20:00:00.000Z' }, cutoff: '2027-01-22T20:00:00.000Z', events: [] }));
     if (req.url === '/api/v1/services/minecraft') return res.end(JSON.stringify({ console: 'minecraft-rcon', status: { state: 'running', uptime_s: 5 } }));
     if (req.url === '/api/v1/services/minecraft/console') return res.end(JSON.stringify({ output: `ran: ${body.command}` }));
     res.end(JSON.stringify({ ok: true }));
@@ -43,6 +46,8 @@ process.env.FORMS_API_URL = base;
 process.env.FORMS_INTERNAL_SECRET = 'forms-secret-0123456789abcdef0123456789';
 process.env.HARBOR_URL = base;
 process.env.HARBOR_TOKEN = 'hbr_test_token';
+process.env.JOURNEYMAN_URL = base;
+process.env.JOURNEYMAN_ADMIN_KEY = 'jm-admin-key';
 
 const { buildApp } = await import('../src/server.js');
 const { seal, SESSION_COOKIE } = await import('../src/session.js');
@@ -50,6 +55,7 @@ let app;
 before(async () => { app = await buildApp({ logger: false }); });
 after(async () => { await app.close(); upstream.close(); });
 const admin = { cookie: `${SESSION_COOKIE}=${seal('session', { via: 'ward', sub: ADMIN, level: 'admin', email: 'helper@example.com', csrf: 'c' }, 3600)}`, 'x-telescreen-csrf': 'c', origin: 'http://localhost:3995' };
+const owner = { ...admin, cookie: `${SESSION_COOKIE}=${seal('session', { via: 'ward', sub: OWNER, level: 'owner', email: 'boss@example.com', csrf: 'c' }, 3600)}` };
 const commands = () => seen.filter(s => s.url.endsWith('/console')).map(s => s.body.command);
 
 test('overview and applicants: seasons come from the cutoff, secrets stay server-side', async () => {
@@ -110,4 +116,24 @@ test('banning an applicant blocks their Ward account and name, rejects them and 
 test('writes need the CSRF token', async () => {
   const res = await app.inject({ method: 'POST', url: '/api/journeyman/bans/server', headers: { ...admin, 'x-telescreen-csrf': 'wrong' }, payload: { player: 'Steve' } });
   assert.equal(res.statusCode, 403);
+});
+
+test('season edits go to the site with its key; start goes to Harbor; the raw console is owners only', async () => {
+  seen.length = 0;
+  let res = await app.inject({ method: 'PUT', url: '/api/journeyman/season/settings', headers: admin, payload: { launchAt: '2027-01-08T20:00:00Z' } });
+  assert.equal(res.statusCode, 200);
+  const put = seen.find(x => x.url === '/admin/v1/season/settings');
+  assert.equal(put.auth, 'Bearer jm-admin-key');
+  assert.deepEqual(put.body, { launchAt: '2027-01-08T20:00:00Z' });
+  res = await app.inject({ method: 'POST', url: '/api/journeyman/server/start', headers: admin });
+  assert.equal(res.statusCode, 200);
+  assert.ok(seen.some(x => x.method === 'POST' && x.url === '/api/v1/services/minecraft/start'));
+  res = await app.inject({ method: 'POST', url: '/api/journeyman/server/delete', headers: admin });
+  assert.equal(res.statusCode, 404);
+  res = await app.inject({ method: 'POST', url: '/api/journeyman/console', headers: admin, payload: { command: 'op Steve' } });
+  assert.equal(res.statusCode, 403);
+  res = await app.inject({ method: 'POST', url: '/api/journeyman/console', headers: owner, payload: { command: 'list' } });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.json().output, 'ran: list');
+  assert.ok(!JSON.stringify(seen.map(x => x.body)).includes('jm-admin-key'));
 });

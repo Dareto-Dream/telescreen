@@ -80,8 +80,9 @@ export const config = {
     harborUrl: (env.HARBOR_URL || 'https://harbor.deltavdevs.com').replace(/\/+$/, ''),
     harborToken: env.HARBOR_TOKEN || '',
     harborService: env.HARBOR_MINECRAFT_SERVICE || 'minecraft',
-    // Season 1 opens 2027-01-01 10:00 HST and takes new players for three weeks (same rule as the Journeyman site).
-    seasonOneCutoff: '2027-01-22 20:00:00',
+    // The Journeyman site owns the season: launch time, onboarding window, schedule and stats (its /admin/v1).
+    siteUrl: (env.JOURNEYMAN_URL || 'https://journeyman.deltavdevs.com').replace(/\/+$/, ''),
+    siteKey: env.JOURNEYMAN_ADMIN_KEY || '',
   },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
