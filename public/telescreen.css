@@ -190,3 +190,7 @@ details.card > summary { cursor: pointer; display: flex; gap: var(--spacing-1); 
 .spaced { margin-top: var(--spacing-2); }
 label.check { display: flex; flex-direction: row; align-items: center; gap: var(--spacing-1); font-weight: var(--font-weight-normal); text-transform: none; letter-spacing: 0; }
 label.check > span { display: inline; }
+
+/* journeyman */
+.ghost.danger-text { color: #fca5a5; }
+.stat dd.wrap { white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
