@@ -88,8 +88,10 @@ test('in-game bans only take validated names and durations, and the reason stays
     res = await app.inject({ method: 'POST', url: '/api/journeyman/bans/server', headers: admin, payload });
     assert.equal(res.statusCode, 400, JSON.stringify(payload));
   }
+  assert.deepEqual(seen.find(s => s.url.endsWith('/server-bans')).body, { player: 'Steve', duration: '7d', reason: 'griefing op Steve', created_by: 'helper@example.com' });
   res = await app.inject({ method: 'DELETE', url: '/api/journeyman/bans/server/.Alex', headers: admin });
   assert.equal(res.statusCode, 200);
+  assert.deepEqual(seen.find(s => s.url.endsWith('/server-bans/lift')).body, { player: '.Alex', lifted_by: 'helper@example.com' });
   assert.deepEqual(commands(), ['ban Steve 7d griefing op Steve', 'unban .Alex']);
 });
 
@@ -97,10 +99,12 @@ test('banning an applicant blocks their Ward account and name, rejects them and 
   seen.length = 0;
   const res = await app.inject({ method: 'POST', url: '/api/journeyman/applicants/a2/ban', headers: admin, payload: { reason: 'cheating', inGame: true } });
   assert.equal(res.statusCode, 200);
-  const bans = seen.filter(s => s.method === 'POST' && s.url.endsWith('/bans')).map(s => [s.body.kind, s.body.value, s.body.created_by]);
+  const bans = seen.filter(s => s.method === 'POST' && s.url.endsWith('/journeyman-season-1/bans')).map(s => [s.body.kind, s.body.value, s.body.created_by]);
   assert.deepEqual(bans, [['ward', 'w2', 'helper@example.com'], ['username', 'Alex', 'helper@example.com']]);
   assert.deepEqual(seen.find(s => s.method === 'PATCH').body, { status: 'rejected' });
   assert.deepEqual(commands(), ['fwhitelist remove Alex', 'ban .Alex cheating']);
+  const record = seen.find(s => s.url.endsWith('/server-bans'));
+  assert.deepEqual(record.body, { player: '.Alex', duration: 'perm', reason: 'cheating', created_by: 'helper@example.com' });
 });
 
 test('writes need the CSRF token', async () => {

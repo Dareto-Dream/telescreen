@@ -107,7 +107,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
     const s = await status('Bans'); if (!s) return;
     const [appBans, serverBans] = await Promise.all([
       api('GET', '/api/journeyman/bans/applications').then(r => r.bans),
-      s.server ? api('GET', '/api/journeyman/bans/server').catch(e => ({ error: e.message })) : Promise.resolve(null),
+      api('GET', '/api/journeyman/bans/server').catch(e => ({ error: e.message })),
     ]);
 
     // In game
@@ -122,16 +122,29 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       if (!player.value.trim()) return player.focus();
       try {
         const r = await api('POST', '/api/journeyman/bans/server', { player: player.value.trim(), duration: duration.value.trim() === 'perm' ? '' : duration.value.trim(), reason: reason.value });
-        toast(r.output || 'Banned'); refresh();
+        toast(r.output || `Sent: ${r.command}`); refresh();
       } catch (err) { fail(err); }
     });
-    const unbanName = h('input', { placeholder: 'player name', maxlength: '17', autocomplete: 'off' });
+    const lift = async name => {
+      try { const r = await api('DELETE', `/api/journeyman/bans/server/${encodeURIComponent(name)}`); toast(r.output || `Sent: unban ${name}`); refresh(); } catch (err) { fail(err); }
+    };
+    const unbanName = h('input', { placeholder: 'any player name', maxlength: '17', autocomplete: 'off' });
     const unban = h('form', { class: 'row' }, unbanName, h('button', { class: 'outline', type: 'submit', disabled: !s.server }, 'Unban'));
-    unban.addEventListener('submit', async e => {
+    unban.addEventListener('submit', e => {
       e.preventDefault();
       if (!unbanName.value.trim()) return unbanName.focus();
-      try { const r = await api('DELETE', `/api/journeyman/bans/server/${encodeURIComponent(unbanName.value.trim())}`); toast(r.output || 'Unbanned'); refresh(); } catch (err) { fail(err); }
+      lift(unbanName.value.trim());
     });
+    const records = serverBans?.bans || [];
+    const serverTable = serverBans?.error ? h('div', { class: 'notice error' }, serverBans.error)
+      : records.length ? h('div', { class: 'table-wrap' }, h('table', {},
+        h('thead', {}, h('tr', {}, ['Player', 'Length', 'Reason', 'By', 'When', ''].map(c => h('th', {}, c)))),
+        h('tbody', {}, records.map(b => h('tr', {},
+          h('td', { class: 'mono' }, b.player), h('td', {}, b.duration || 'perm'), h('td', {}, b.reason || '—'), h('td', {}, b.created_by || '—'),
+          h('td', {}, ago(utc(b.created_at))),
+          h('td', { class: 'actions' }, b.lifted_at ? h('span', { class: 'pill muted', title: `by ${b.lifted_by || '—'}` }, `lifted ${ago(utc(b.lifted_at))}`)
+            : h('button', { class: 'ghost', disabled: !s.server, onclick: async () => { if (await confirmBox(`Unban ${b.player}?`, { danger: false })) lift(b.player); } }, 'unban')))))))
+        : h('p', { class: 'empty' }, 'No bans issued from here yet.');
 
     // Applications
     const kind = h('select', {}, h('option', { value: 'username' }, 'Minecraft username'), h('option', { value: 'ward' }, 'Ward account id'));
@@ -164,9 +177,9 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       h('h2', { class: 'subheadline' }, 'In game'),
       h('p', { class: 'caption' }, 'Runs LibertyBans on the server. Bans by name; Bedrock players are .name.'),
       banForm,
-      h('div', { class: 'stack ward-gap-above' }, unban,
-        serverBans?.error ? h('div', { class: 'notice error' }, serverBans.error)
-          : serverBans ? h('pre', { class: 'log' }, serverBans.output || 'No bans.') : null),
+      h('div', { class: 'stack ward-gap-above' },
+        h('p', { class: 'caption' }, 'Bans issued from Telescreen. Bans made in game or from Discord are not listed; unban those by name.'),
+        serverTable, unban),
       h('h2', { class: 'subheadline ward-gap-above' }, 'Applications'),
       h('p', { class: 'caption' }, 'Blocked Ward accounts and Minecraft names get "You can not submit this form." on the Season form.'),
       appForm,

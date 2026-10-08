@@ -60,6 +60,11 @@ async function submissions() {
   return rows.map(r => ({ ...r, season: seasonOf(r.created_at) }));
 }
 
+const banCommand = (player, duration, reason) => ['ban', player, duration && duration !== 'perm' ? duration : '', reason].filter(Boolean).join(' ');
+// LibertyBans replies asynchronously, so its ban list never comes back over RCON. Forms keeps the record of
+// bans issued from here instead.
+const recordBan = (player, duration, reason, by) => forms('POST', `/internal/forms/${j.formSlug}/server-bans`, { player, duration: duration || 'perm', reason, created_by: by });
+
 // Floodgate keeps its own whitelist for Bedrock players.
 function whitelistCommand(edition, username, add) {
   const name = String(username || '').replace(/^\./, '');
@@ -121,7 +126,8 @@ export async function journeymanRoutes(app) {
     let inGame = null;
     if (request.body?.inGame) {
       const name = row.answers.edition === 'bedrock' ? `.${String(row.answers.username).replace(/^\./, '')}` : row.answers.username;
-      inGame = await tryRun(PLAYER.test(name) ? ['ban', name, duration && duration !== 'perm' ? duration : '', reason].filter(Boolean).join(' ') : null);
+      inGame = await tryRun(PLAYER.test(name) ? banCommand(name, duration, reason) : null);
+      if (!inGame.error) await recordBan(name, duration, reason, by);
     }
     audit(request, 'journeyman.applicant_ban', { id, username: row.answers.username, inGame: Boolean(request.body?.inGame), reason });
     return { ok: true, whitelist, inGame };
@@ -145,15 +151,16 @@ export async function journeymanRoutes(app) {
   });
 
   // ---------- in-game bans (LibertyBans) ----------
-  app.get('/api/journeyman/bans/server', async () => ({ output: await run('banlist') }));
+  app.get('/api/journeyman/bans/server', async () => forms('GET', `/internal/forms/${j.formSlug}/server-bans`));
   app.post('/api/journeyman/bans/server', async request => {
     const player = String(request.body?.player || '').trim();
     const duration = request.body?.duration ? String(request.body.duration) : '';
     const reason = oneLine(request.body?.reason, 200);
     if (!PLAYER.test(player)) { const e = new Error('Player names are 1-16 letters, digits or _ (Bedrock players start with a dot)'); e.statusCode = 400; throw e; }
     if (duration && !DURATION.test(duration)) { const e = new Error('duration looks like 7d, 12h, 2w or perm'); e.statusCode = 400; throw e; }
-    const command = ['ban', player, duration && duration !== 'perm' ? duration : '', reason].filter(Boolean).join(' ');
+    const command = banCommand(player, duration, reason);
     const output = await run(command);
+    await recordBan(player, duration, reason, actorOf(request.session) || 'telescreen');
     audit(request, 'journeyman.server_ban', { player, duration: duration || 'perm', reason });
     return { command, output };
   });
@@ -161,7 +168,8 @@ export async function journeymanRoutes(app) {
     const player = String(request.params.player || '').trim();
     if (!PLAYER.test(player)) { const e = new Error('Not a player name'); e.statusCode = 400; throw e; }
     const output = await run(`unban ${player}`);
+    const { lifted } = await forms('POST', `/internal/forms/${j.formSlug}/server-bans/lift`, { player, lifted_by: actorOf(request.session) || 'telescreen' });
     audit(request, 'journeyman.server_unban', { player });
-    return { output };
+    return { output, lifted };
   });
 }
