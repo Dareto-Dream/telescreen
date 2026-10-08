@@ -194,3 +194,10 @@ label.check > span { display: inline; }
 /* journeyman */
 .ghost.danger-text { color: #fca5a5; }
 .stat dd.wrap { white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+svg.spark { display: block; width: 100%; height: 90px; color: var(--primary); margin-top: var(--spacing-1); }
+td.wrap, .caption.wrap { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 28rem; }
+label.check { display: flex; flex-direction: row; align-items: center; gap: var(--spacing-1); text-transform: none; letter-spacing: normal; font-size: var(--font-2); }
+label.check input { width: auto; margin: 0; }
+td.wrap { min-width: 12rem; }
+.events td.actions { white-space: normal; min-width: 9rem; }
+.events td.actions button { margin: 0 2px 2px 0; }

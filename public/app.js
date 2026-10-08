@@ -115,6 +115,8 @@ function buildNav(pg, redis) {
     link('/spectralis/creators', 'Verified creators'),
     h('div', { class: 'nav-group' }, 'Journeyman'),
     link('/journeyman/applicants', 'Applicants'),
+    link('/journeyman/season', 'Season'),
+    link('/journeyman/server', 'Server'),
     link('/journeyman/bans', 'Bans'),
     h('div', { class: 'nav-group' }, 'Ward'),
     link('/ward/accounts', 'Accounts'),
@@ -598,7 +600,7 @@ import('./r2.js').then(m => m.register({ route, api, h, mount, head, toast, fail
 import('./spectralis.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/spectralis(?:\/.*)?$/, async () => mount(head('spectralis', 'Spectralis'), h('div', { class: 'notice warn' }, 'Spectralis module failed to load.')));
 });
-import('./journeyman.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago })).catch(() => {
+import('./journeyman.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/journeyman(?:\/.*)?$/, async () => mount(head('journeyman', 'Journeyman'), h('div', { class: 'notice warn' }, 'Journeyman module failed to load.')));
 });
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
