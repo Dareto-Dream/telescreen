@@ -118,6 +118,11 @@ function buildNav(pg, redis) {
     link('/journeyman/season', 'Season'),
     link('/journeyman/server', 'Server'),
     link('/journeyman/bans', 'Bans'),
+    h('div', { class: 'nav-group' }, 'Bouncer'),
+    link('/bouncer/servers', 'Servers'),
+    link('/bouncer/marketplace', 'Marketplace'),
+    link('/bouncer/links', 'Linked accounts'),
+    link('/bouncer/log', 'Log'),
     h('div', { class: 'nav-group' }, 'Ward'),
     link('/ward/accounts', 'Accounts'),
     link('/ward/apps', 'Apps'),
@@ -602,6 +607,9 @@ import('./spectralis.js').then(m => m.register({ route, api, h, mount, head, toa
 });
 import('./journeyman.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/journeyman(?:\/.*)?$/, async () => mount(head('journeyman', 'Journeyman'), h('div', { class: 'notice warn' }, 'Journeyman module failed to load.')));
+});
+import('./bouncer.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/bouncer(?:\/.*)?$/, async () => mount(head('bouncer', 'Bouncer'), h('div', { class: 'notice warn' }, 'Bouncer module failed to load.')));
 });
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
   route(/^\/deltatime(?:\/.*)?$/, async () => mount(head('deltatime', 'Fraud review'), h('div', { class: 'notice warn' }, 'DeltaTime module failed to load.')));
