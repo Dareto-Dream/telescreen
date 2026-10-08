@@ -71,6 +71,18 @@ export const config = {
     budgetGb: Number(env.R2_BUDGET_GB || 5) || 5,
     endpoint: env.R2_ENDPOINT || '',
   },
+  // Journeyman (the Minecraft season server): applications and application bans live in DeltaVDevs Forms, and
+  // in-game commands (whitelist, bans) go through Harbor's console on the machine running the server.
+  journeyman: {
+    formsUrl: (env.FORMS_API_URL || '').replace(/\/+$/, ''),
+    formsSecret: env.FORMS_INTERNAL_SECRET || '',
+    formSlug: env.JOURNEYMAN_FORM_SLUG || 'journeyman-season-1',
+    harborUrl: (env.HARBOR_URL || 'https://harbor.deltavdevs.com').replace(/\/+$/, ''),
+    harborToken: env.HARBOR_TOKEN || '',
+    harborService: env.HARBOR_MINECRAFT_SERVICE || 'minecraft',
+    // Season 1 opens 2027-01-01 10:00 HST and takes new players for three weeks (same rule as the Journeyman site).
+    seasonOneCutoff: '2027-01-22 20:00:00',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',

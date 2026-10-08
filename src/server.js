@@ -17,6 +17,7 @@ import { deltatimeRoutes, closeDeltatime } from './deltatime.js';
 import { wardRoutes } from './ward.js';
 import { searchRoutes } from './search.js';
 import { spectralisRoutes } from './spectralis.js';
+import { journeymanRoutes } from './journeyman.js';
 import { r2Routes } from './r2.js';
 
 const THEME = 'https://css.deltavdevs.com';
@@ -65,6 +66,7 @@ export async function buildApp(options = {}) {
       content: Boolean(config.content.apiUrl && config.content.token),
       search: Boolean(config.search.url && config.search.key),
       spectralis: Boolean(config.spectralis.url && config.spectralis.key),
+      journeyman: Boolean(config.journeyman.formsUrl && config.journeyman.formsSecret),
       r2: Boolean(config.r2.accountId && config.r2.accessKeyId && config.r2.secretAccessKey),
       files: Boolean(config.files.url && config.files.user && config.files.password),
     }));
@@ -74,6 +76,7 @@ export async function buildApp(options = {}) {
     await api.register(wardRoutes);
     await api.register(searchRoutes);
     await api.register(spectralisRoutes);
+    await api.register(journeymanRoutes);
     await api.register(r2Routes);
     await api.register(postgresRoutes);
     await api.register(redisRoutes);
