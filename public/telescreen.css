@@ -201,3 +201,5 @@ label.check input { width: auto; margin: 0; }
 td.wrap { min-width: 12rem; }
 .events td.actions { white-space: normal; min-width: 9rem; }
 .events td.actions button { margin: 0 2px 2px 0; }
+.wrap-actions td.actions { white-space: normal; min-width: 16rem; }
+.wrap-actions td.actions button { margin: 0 2px 2px 0; }
