@@ -89,6 +89,11 @@ export const config = {
     url: (env.BOUNCER_URL || 'https://bouncer.deltavdevs.com').replace(/\/+$/, ''),
     key: env.BOUNCER_ADMIN_KEY || '',
   },
+  // Logger, the team log at logger.deltavdevs.com (its own Railway project), run over its /admin/v1.
+  logger: {
+    url: (env.LOGGER_URL || 'https://logger.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.LOGGER_ADMIN_KEY || '',
+  },
   railway: {
     projectToken: env.RAILWAY_PROJECT_TOKEN || '',
     apiToken: env.RAILWAY_API_TOKEN || '',
