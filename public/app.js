@@ -130,6 +130,10 @@ function buildNav(pg, redis) {
     link('/logger/workspaces', 'Workspaces'),
     link('/logger/users', 'Users'),
     link('/logger/log', 'Log'),
+    h('div', { class: 'nav-group' }, 'Mail'),
+    link('/mail/mailboxes', 'Mailboxes'),
+    link('/mail/delivery', 'Delivery'),
+    link('/mail/log', 'Log'),
     h('div', { class: 'nav-group' }, 'Movies'),
     link('/movies', 'Allowlist'),
     h('div', { class: 'nav-group' }, 'Ward'),
@@ -622,6 +626,9 @@ import('./bouncer.js').then(m => m.register({ route, api, h, mount, head, toast,
 });
 import('./logger.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/logger(?:\/.*)?$/, async () => mount(head('logger', 'Logger'), h('div', { class: 'notice warn' }, 'Logger module failed to load.')));
+});
+import('./mail.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/mail(?:\/.*)?$/, async () => mount(head('mail', 'Mail'), h('div', { class: 'notice warn' }, 'Mail module failed to load.')));
 });
 import('./movies.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, me: () => me })).catch(() => {
   route(/^\/movies(?:\/.*)?$/, async () => mount(head('movies', 'Movies'), h('div', { class: 'notice warn' }, 'Movies module failed to load.')));
