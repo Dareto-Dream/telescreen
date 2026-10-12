@@ -94,6 +94,11 @@ export const config = {
     url: (env.LOGGER_URL || 'https://logger.deltavdevs.com').replace(/\/+$/, ''),
     key: env.LOGGER_ADMIN_KEY || '',
   },
+  // Mail, staff mailboxes at mail.deltavdevs.com, run over its /admin/v1.
+  mail: {
+    url: (env.MAIL_URL || 'https://mail.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.MAIL_ADMIN_KEY || '',
+  },
   // The home movie player, Ward-gated. The owner manages who's on its allowlist from here; the player checks
   // it itself on every sign-in. No /admin/v1 shape of its own, just the one allowlist resource.
   movies: {
