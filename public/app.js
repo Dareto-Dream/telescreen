@@ -130,6 +130,8 @@ function buildNav(pg, redis) {
     link('/logger/workspaces', 'Workspaces'),
     link('/logger/users', 'Users'),
     link('/logger/log', 'Log'),
+    h('div', { class: 'nav-group' }, 'Movies'),
+    link('/movies', 'Allowlist'),
     h('div', { class: 'nav-group' }, 'Ward'),
     link('/ward/accounts', 'Accounts'),
     link('/ward/apps', 'Apps'),
@@ -620,6 +622,9 @@ import('./bouncer.js').then(m => m.register({ route, api, h, mount, head, toast,
 });
 import('./logger.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/logger(?:\/.*)?$/, async () => mount(head('logger', 'Logger'), h('div', { class: 'notice warn' }, 'Logger module failed to load.')));
+});
+import('./movies.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, me: () => me })).catch(() => {
+  route(/^\/movies(?:\/.*)?$/, async () => mount(head('movies', 'Movies'), h('div', { class: 'notice warn' }, 'Movies module failed to load.')));
 });
 import('./deltatime.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot })).catch(() => {
   route(/^\/deltatime(?:\/.*)?$/, async () => mount(head('deltatime', 'Fraud review'), h('div', { class: 'notice warn' }, 'DeltaTime module failed to load.')));
