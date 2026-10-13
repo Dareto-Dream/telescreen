@@ -130,6 +130,12 @@ function buildNav(pg, redis) {
     link('/logger/workspaces', 'Workspaces'),
     link('/logger/users', 'Users'),
     link('/logger/log', 'Log'),
+    h('div', { class: 'nav-group' }, 'Go'),
+    link('/go/links', 'Short links'),
+    link('/go/log', 'Log'),
+    h('div', { class: 'nav-group' }, 'Store'),
+    link('/store/uploads', 'Uploads'),
+    link('/store/log', 'Log'),
     h('div', { class: 'nav-group' }, 'Mail'),
     link('/mail/mailboxes', 'Mailboxes'),
     link('/mail/delivery', 'Delivery'),
@@ -626,6 +632,12 @@ import('./bouncer.js').then(m => m.register({ route, api, h, mount, head, toast,
 });
 import('./logger.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/logger(?:\/.*)?$/, async () => mount(head('logger', 'Logger'), h('div', { class: 'notice warn' }, 'Logger module failed to load.')));
+});
+import('./go.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/go(?:\/.*)?$/, async () => mount(head('go', 'Go'), h('div', { class: 'notice warn' }, 'Go module failed to load.')));
+});
+import('./store.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/store(?:\/.*)?$/, async () => mount(head('store', 'Store'), h('div', { class: 'notice warn' }, 'Store module failed to load.')));
 });
 import('./mail.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/mail(?:\/.*)?$/, async () => mount(head('mail', 'Mail'), h('div', { class: 'notice warn' }, 'Mail module failed to load.')));
