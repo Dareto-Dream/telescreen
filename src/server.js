@@ -20,6 +20,8 @@ import { spectralisRoutes } from './spectralis.js';
 import { journeymanRoutes } from './journeyman.js';
 import { bouncerRoutes } from './bouncer.js';
 import { loggerRoutes } from './logger.js';
+import { goRoutes } from './go.js';
+import { storeRoutes } from './store.js';
 import { mailRoutes } from './mail.js';
 import { moviesRoutes } from './movies.js';
 import { r2Routes } from './r2.js';
@@ -83,6 +85,8 @@ export async function buildApp(options = {}) {
     await api.register(journeymanRoutes);
     await api.register(bouncerRoutes);
     await api.register(loggerRoutes);
+    await api.register(goRoutes);
+    await api.register(storeRoutes);
     await api.register(mailRoutes);
     await api.register(moviesRoutes);
     await api.register(r2Routes);

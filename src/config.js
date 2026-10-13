@@ -94,6 +94,15 @@ export const config = {
     url: (env.LOGGER_URL || 'https://logger.deltavdevs.com').replace(/\/+$/, ''),
     key: env.LOGGER_ADMIN_KEY || '',
   },
+  // go (short links) and store (file sharing), each run over its /admin/v1.
+  go: {
+    url: (env.GO_URL || 'https://go.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.GO_ADMIN_KEY || '',
+  },
+  store: {
+    url: (env.STORE_URL || 'https://store.deltavdevs.com').replace(/\/+$/, ''),
+    key: env.STORE_ADMIN_KEY || '',
+  },
   // Mail, staff mailboxes at mail.deltavdevs.com, run over its /admin/v1.
   mail: {
     url: (env.MAIL_URL || 'https://mail.deltavdevs.com').replace(/\/+$/, ''),
