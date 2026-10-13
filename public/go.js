@@ -29,6 +29,13 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
     act(() => api('DELETE', `/api/go/links/${link.slug}`), 'Deleted')();
   }
 
+  async function create() {
+    const destination = prompt('Where should the new link go? (https://…)');
+    if (!destination) return;
+    const slug = prompt('Short name? Leave blank for a random one.') || undefined;
+    act(() => api('POST', '/api/go/links', { destination, slug }), 'Created')();
+  }
+
   route(/^\/go(?:\/links)?(?:\?.*)?$/, async () => {
     if (!await ready('Short links')) return;
     const q = new URLSearchParams(location.hash.split('?')[1] || '').get('q') || '';
@@ -38,6 +45,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
     const t = o.totals;
     show(
       head('go', 'Short links',
+        h('button', { class: 'cta small', type: 'button', onclick: create }, 'New link'),
         h('a', { href: 'https://go.deltavdevs.com/', target: '_blank', rel: 'noopener', class: 'button-link' }, h('button', { class: 'outline small', type: 'button' }, 'Open go')),
         h('a', { href: 'https://analytics.deltavdevs.com/#/go', target: '_blank', rel: 'noopener', class: 'button-link' }, h('button', { class: 'outline small', type: 'button' }, 'Clicks in Analytics'))),
       tabs('links'),

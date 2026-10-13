@@ -12,6 +12,7 @@ const SLUG = '[a-z0-9][a-z0-9_-]{0,47}';
 const ROUTES = [
   ['GET', /^overview$/, false],
   ['GET', /^links$/, false],
+  ['POST', /^links$/, false],
   ['GET', new RegExp(`^links/${SLUG}$`), false],
   ['POST', new RegExp(`^links/${SLUG}$`), false],
   ['POST', new RegExp(`^links/${SLUG}/(enable|disable)$`), false],
