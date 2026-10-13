@@ -16,7 +16,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
     ? h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map(([name]) => h('th', {}, name)))), h('tbody', {}, rows.map(r => h('tr', {}, cols.map(([name, fn]) => h('td', { class: name === '' ? 'actions' : null }, fn(r))))))))
     : h('p', { class: 'empty' }, empty));
   const act = (fn, done) => async () => { try { await fn(); if (done) toast(done); refresh(); } catch (e) { fail(e); } };
-  const rule = b => (b.access === 'public' ? 'public' : `guarded · ${b.mode}`);
+  const rule = b => `${b.access === 'public' ? 'public' : `guarded · ${b.mode}`} · ${b.view === 'ui' ? 'with UI' : 'raw'}`;
 
   async function ready(title) {
     const s = await api('GET', '/api/store');
@@ -57,6 +57,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
         ['', b => (b.state === 'expired' ? '' : h('span', {},
           h('button', { class: 'ghost', onclick: () => extend(b) }, 'expiry'), ' ',
           h('button', { class: 'ghost', onclick: act(() => api('POST', `/api/store/bundles/${b.id}`, b.access === 'public' ? { access: 'guarded', mode: 'whitelist' } : { access: 'public' }), b.access === 'public' ? 'Now guarded (whitelist)' : 'Now public') }, b.access === 'public' ? 'guard it' : 'make public'), ' ',
+          h('button', { class: 'ghost', onclick: act(() => api('POST', `/api/store/bundles/${b.id}`, { view: b.view === 'ui' ? 'raw' : 'ui' }), 'Saved') }, b.view === 'ui' ? 'show raw' : 'show UI'), ' ',
           h('button', { class: 'ghost danger-text', disabled: !isOwner(), onclick: () => remove(b) }, 'delete')))],
       ], q ? 'Nothing matches.' : 'Nothing uploaded yet.'),
       list.more ? h('p', { class: 'caption' }, 'Showing the newest 50. Search to narrow it down.') : null,
