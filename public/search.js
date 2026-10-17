@@ -63,6 +63,11 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       if (!domain.value.trim()) return domain.focus();
       try { await api('POST', '/api/search/crawl/recrawl', { domain: domain.value.trim() }); toast(`Recrawl of ${domain.value.trim()} queued`); domain.value = ''; } catch (e) { fail(e); }
     } }, 'Recrawl domain');
+    const backfill = h('button', { class: 'outline', title: 'fetch every stored page of this domain again (or all pages if the box is empty) so their images are extracted and indexed', onclick: async () => {
+      const d = domain.value.trim();
+      if (!await confirmBox(d ? `Fetch every stored page of ${d} again so its images are indexed? It uses the recrawl lane, so no page budget is spent.` : 'Fetch EVERY stored page again so all their images are indexed? On the full index this takes about as long as the original crawl.', { danger: !d })) return;
+      try { await api('POST', '/api/search/images/backfill', d ? { domain: d } : { all: true }); toast(d ? `Images backfill of ${d} queued` : 'Images backfill of every page queued'); } catch (e) { fail(e); }
+    } }, 'Index images');
     const rebuild = h('button', { class: 'outline', disabled: !isOwner(), title: isOwner() ? '' : 'owners only', onclick: async () => {
       if (!await confirmBox('Rebuild the whole index from the stored pages? It runs in the background and swaps in when finished.', { danger: false })) return;
       try { await api('POST', '/api/search/index/rebuild', {}); toast('Index rebuild queued'); } catch (e) { fail(e); }
@@ -85,7 +90,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
         h('div', { class: 'card tight' }, h('h3', {}, 'Needs attention'), h('dl', { class: 'stat' },
           h('dt', {}, 'opt-outs to review'), h('dd', {}, h('a', { href: '#/search/optouts' }, num(st.pending?.optouts))), h('dt', {}, 'queued commands'), h('dd', {}, num(st.pending?.crawl_requests)),
           h('dt', {}, 'crawl jobs running'), h('dd', {}, h('a', { href: '#/search/crawls' }, num(st.jobs?.active)))))),
-      h('div', { class: 'row ward-gap-above' }, domain, recrawl, rebuild),
+      h('div', { class: 'row ward-gap-above' }, domain, recrawl, backfill, rebuild),
       errors.length ? h('div', { class: 'stack ward-gap-above' }, h('p', { class: 'eyebrow' }, 'fetch outcomes this run'), table(errors, [['kind', ([k]) => k], ['count', ([, v]) => num(v)]])) : null,
     );
   });

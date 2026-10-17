@@ -17,6 +17,7 @@ const ALLOWED = [
   ['GET', /^crawl\/jobs\/\d{1,9}$/],
   ['POST', /^crawl\/jobs\/\d{1,9}\/cancel$/],
   ['POST', /^index\/rebuild$/],
+  ['POST', /^images\/backfill$/],
   ['POST', /^purge$/],
   ['GET', /^seeds$/],
   ['POST', /^seeds$/],

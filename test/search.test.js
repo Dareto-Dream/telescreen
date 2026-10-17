@@ -114,3 +114,12 @@ test('anything outside the allowlist never reaches the search service, and sessi
   assert.equal((await app.inject({ method: 'GET', url: '/api/search' })).statusCode, 401);
   assert.equal((await app.inject({ method: 'POST', url: '/api/search/crawl/pause', headers: { ...owner, 'x-telescreen-csrf': 'wrong' }, payload: {} })).statusCode, 403, 'CSRF still applies');
 });
+
+test('the images backfill goes through for admins with the body untouched', async () => {
+  seen.length = 0;
+  const res = await app.inject({ method: 'POST', url: '/api/search/images/backfill', headers: admin, payload: { domain: 'example.com' } });
+  assert.equal(res.statusCode, 200);
+  const hit = seen.find(s => s.url === '/admin/v1/images/backfill');
+  assert.equal(hit.auth, 'Bearer search-admin-key-search-admin-key');
+  assert.deepEqual(JSON.parse(hit.body), { domain: 'example.com' });
+});
