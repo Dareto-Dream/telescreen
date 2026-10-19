@@ -220,7 +220,7 @@ const FIELDS = {
   projects: [
     ['title', 'text'], ['progress', 'select', PROGRESS], ['description', 'textarea', null, true], ['tags', 'tags'], ['link', 'text'],
     ['thumbnail_url', 'text'], ['blog_project_id', 'text'], ['markdown_details', 'markdown', null, true],
-    ['downloads', 'json', '[{ "label": "", "url": "" }]', true], ['videos', 'json', '[{ "label": "", "url": "" }]', true], ['iframes', 'json', '[{ "label": "", "url": "" }]', true],
+    ['downloads', 'json', '[{ "label": "", "url": "" }]', true], ['videos', 'json', '[{ "label": "", "url": "" }]', true], ['iframes', 'json', '[{ "label": "", "url": "", "thumbnail": "", "play_on_thumbnail": false }]', true],
   ],
   songs: [
     ['title', 'text'], ['artist', 'text'], ['description', 'textarea', null, true], ['release_date', 'text'], ['album', 'text'],
@@ -299,6 +299,7 @@ route(/^\/content\/(projects|songs|albums|staff)(?:\/(\d+|new))?$/, async (colle
         else if (type === 'tags') out[name] = input.value.split(',').map(s => s.trim()).filter(Boolean);
         else if (type === 'number') out[name] = input.value === '' ? null : Number(input.value);
         else if (type === 'json') { if (input.value.trim()) { try { out[name] = JSON.parse(input.value); } catch { throw new Error(`${name} isn't valid JSON`); } } }
+        else if (name === 'blog_project_id') out[name] = input.value.trim() || null; // empty means unlinked; '' fails the backend's UUID check
         else out[name] = input.value;
       }
       if (extraInput.value.trim()) { try { Object.assign(out, JSON.parse(extraInput.value)); } catch { throw new Error('Extra fields aren\'t valid JSON'); } }
