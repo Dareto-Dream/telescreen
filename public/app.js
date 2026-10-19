@@ -11,6 +11,13 @@ function h(tag, attrs = {}, ...children) {
     if (v === null || v === undefined || v === false) continue;
     if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
     else if (k === 'class') el.className = v;
+    else if (k === 'style' && typeof v === 'string') {
+      // setAttribute('style') is blocked by the CSP (no unsafe-inline); setting properties one by one isn't
+      for (const decl of v.split(';')) {
+        const i = decl.indexOf(':');
+        if (i > 0) el.style.setProperty(decl.slice(0, i).trim(), decl.slice(i + 1).trim());
+      }
+    }
     else if (k === 'value') el.value = v;
     else if (k === 'checked') el.checked = Boolean(v);
     else el.setAttribute(k, v === true ? '' : v);
