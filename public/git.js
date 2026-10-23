@@ -67,6 +67,7 @@ export function register({ route, api, h, mount, head, toast, fail, confirmBox, 
       tabs('repos'),
       table(repos, [
         ['repo', r => h('a', { href: `${s.url}/${r.name}.git`, target: '_blank', rel: 'noopener noreferrer' }, r.name)],
+        ['visibility', r => h('span', { class: `pill ${r.private ? 'yellow' : 'muted'}` }, r.private ? 'private' : 'public')],
         ['owner', r => r.owner_name || 'admin'],
         ['created', r => when(r.created_at)],
         ['', remove],
