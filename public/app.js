@@ -115,6 +115,9 @@ function buildNav(pg, redis) {
     link('/search/sources', 'Seeds & blocklist'),
     link('/search/optouts', 'Opt-outs'),
     link('/search/keys', 'API keys'),
+    h('div', { class: 'nav-group' }, 'Git'),
+    link('/git/requests', 'Access requests'),
+    link('/git/repos', 'Repos'),
     h('div', { class: 'nav-group' }, 'Spectralis'),
     link('/spectralis/warnings', 'Warnings'),
     link('/spectralis/changelog', 'Changelog'),
@@ -625,6 +628,9 @@ import('./ward.js').then(m => m.register({ route, api, h, mount, head, toast, fa
 });
 import('./search.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, qs, ago, dot, me: () => me })).catch(() => {
   route(/^\/search(?:\/.*)?$/, async () => mount(head('search', 'Search engine'), h('div', { class: 'notice warn' }, 'Search module failed to load.')));
+});
+import('./git.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
+  route(/^\/git(?:\/.*)?$/, async () => mount(head('git', 'Git'), h('div', { class: 'notice warn' }, 'Git module failed to load.')));
 });
 import('./r2.js').then(m => m.register({ route, api, h, mount, head, toast, fail, confirmBox, ago, me: () => me })).catch(() => {
   route(/^\/r2(?:[?].*)?$/, async () => mount(head('release cdn', 'Release CDN'), h('div', { class: 'notice warn' }, 'Release CDN module failed to load.')));

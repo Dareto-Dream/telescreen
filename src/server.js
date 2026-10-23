@@ -16,6 +16,7 @@ import { fileRoutes } from './files.js';
 import { deltatimeRoutes, closeDeltatime } from './deltatime.js';
 import { wardRoutes } from './ward.js';
 import { searchRoutes } from './search.js';
+import { gitRoutes } from './git.js';
 import { spectralisRoutes } from './spectralis.js';
 import { journeymanRoutes } from './journeyman.js';
 import { bouncerRoutes } from './bouncer.js';
@@ -71,6 +72,7 @@ export async function buildApp(options = {}) {
       counts: { postgres: config.postgres.length, redis: config.redis.length, http: config.http.length, railway: Boolean(config.railway.projectToken || config.railway.apiToken) },
       content: Boolean(config.content.apiUrl && config.content.token),
       search: Boolean(config.search.url && config.search.key),
+      git: Boolean(config.git.url && config.git.key),
       spectralis: Boolean(config.spectralis.url && config.spectralis.key),
       journeyman: Boolean(config.journeyman.formsUrl && config.journeyman.formsSecret),
       r2: Boolean(config.r2.accountId && config.r2.accessKeyId && config.r2.secretAccessKey),
@@ -81,6 +83,7 @@ export async function buildApp(options = {}) {
     await api.register(deltatimeRoutes);
     await api.register(wardRoutes);
     await api.register(searchRoutes);
+    await api.register(gitRoutes);
     await api.register(spectralisRoutes);
     await api.register(journeymanRoutes);
     await api.register(bouncerRoutes);

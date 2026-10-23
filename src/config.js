@@ -55,6 +55,11 @@ export const config = {
     url: (env.SEARCH_URL || '').replace(/\/+$/, ''),
     key: env.SEARCH_ADMIN_KEY || '',
   },
+  // Git hosting (git.deltavdevs.com), run over its /admin/v1: who may make repos, and the repos themselves.
+  git: {
+    url: (env.GIT_URL || '').replace(/\/+$/, ''),
+    key: env.GIT_ADMIN_KEY || '',
+  },
   // Spectralis (spectralis-api.deltavdevs.com) hosts its own warnings, changelog, community list and creators.
   spectralis: {
     url: (env.SPECTRALIS_URL || 'https://spectralis-api.deltavdevs.com').replace(/\/+$/, ''),
